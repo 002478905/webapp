@@ -23,6 +23,7 @@ const PORT = 8080;
 
 // Parse JSON request bodies (even though we don't expect them for GET)
 app.use(express.json());
+app.use("/v1/user", userRoutes);
 
 //setting up the postgres connection
 
@@ -46,7 +47,12 @@ app.all("/healthz", async (req, res) => {
   if (req.headers["content-length"] && req.headers["content-length"] !== "0") {
     return res.status(400).send(); // Return 400 Bad Request if there's a payload
   }
-
+  // Check for any query parameters in the request
+  if (Object.keys(req.query).length > 0) {
+    return res
+      .status(400)
+      .send({ message: "Query parameters are not allowed" }); // Return 400 Bad Request if query parameters are present
+  }
   try {
     // Explicitly create a new client and connect to the database
     console.log("Attempting to connect to the database...");
