@@ -72,9 +72,11 @@ app.all("/healthz", async (req, res) => {
     return res.status(503).send(); // Service Unavailable if DB connection fails
   }
 });
-// Register user routes with the `/api/users` path
-app.use("/api/users", userRoutes);
+// Register user routes with the /api/users path
+app.use("/v1/user", userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+module.exports = app;
