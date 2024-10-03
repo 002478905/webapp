@@ -81,7 +81,7 @@ router.put("/self", auth, async (req, res) => {
 
     // Allowed fields for update
     const allowedFields = ["firstName", "lastName", "password", "email"];
-    console.log(req.body);
+
 
     // Validate that only allowed fields are being updated
     const updateFields = Object.keys(req.body);
@@ -89,8 +89,6 @@ router.put("/self", auth, async (req, res) => {
       (field) => !allowedFields.includes(field)
     );
 
-    console.log(updateFields);
-    console.log(isInValidUpdate);
 
     if (user.email !== email || isInValidUpdate) {
       return res
@@ -107,7 +105,7 @@ router.put("/self", auth, async (req, res) => {
 
     // await user.save(); // Save the changes to the database
 
-    res.status(200).json({
+    res.status(204).json({
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
