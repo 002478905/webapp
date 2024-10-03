@@ -13,11 +13,12 @@ router.get("/", async (req, res) => {
   }
 });
 // Get current user's account information
-router.get("/me", auth, async (req, res) => {
+router.get("/self", auth, async (req, res) => {
   try {
     const user = req.user;
 
     res.status(200).json({
+      id: user.id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -28,10 +29,14 @@ router.get("/me", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
+// Catch-all for unsupported methods on /v1/user/self
+router.all("/self", (req, res) => {
+  res.set("Allow", "GET"); // Specify which methods are allowed
+  res.status(405).json({ message: "Method Not Allowed" });
+});
 // Create a new user
-router.post("/create", async (req, res, next) => {
-  const { email, password, firstName, lastName } = req.body;
+router.post("/", async (req, res) => {
+  const { email, password, first_name, last_name } = req.body;
 
   try {
     // Check if a user with the given email already exists
@@ -46,17 +51,18 @@ router.post("/create", async (req, res, next) => {
     const newUser = await User.create({
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
+      firstName: first_name,
+      lastName: last_name,
     });
 
     // Return the response with the user details
     res.status(201).json({
       id: newUser.id,
+      first_name: newUser.firstName,
+      last_name: newUser.lastName,
       email: newUser.email,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
       account_created: newUser.account_created,
+      account_updated: newUser.account_updated,
     });
   } catch (err) {
     // If Sequelize throws a validation error, return a 400 status code
@@ -65,13 +71,13 @@ router.post("/create", async (req, res, next) => {
     }
 
     // For other errors, pass it to the global error handler
-    next(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 // Update current user's account information
 // Update current user's account information
-router.put("/me", auth, async (req, res) => {
+router.put("/self", auth, async (req, res) => {
   try {
     const user = req.user; // Get the authenticated user from the auth middleware
 
