@@ -30,15 +30,17 @@ router.get("/me", auth, async (req, res) => {
 });
 
 // Create a new user
-router.post("/create", async (req, res) => {
+router.post("/create", async (req, res, next) => {
   const { email, password, firstName, lastName } = req.body;
 
   try {
+    // Check if a user with the given email already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // Create a new user with hashed password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
@@ -48,16 +50,22 @@ router.post("/create", async (req, res) => {
       lastName,
     });
 
+    // Return the response with the user details
     res.status(201).json({
-      id: newUser.id, // Include the new UUID in the response
+      id: newUser.id,
       email: newUser.email,
       firstName: newUser.firstName,
       lastName: newUser.lastName,
       account_created: newUser.account_created,
-      account_updated: newUser.account_updated,
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    // If Sequelize throws a validation error, return a 400 status code
+    if (err.name === "SequelizeValidationError") {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // For other errors, pass it to the global error handler
+    next(err);
   }
 });
 
