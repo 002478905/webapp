@@ -29,11 +29,7 @@ router.get("/self", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-// Catch-all for unsupported methods on /v1/user/self
-router.all("/self", (req, res) => {
-  res.set("Allow", "GET"); // Specify which methods are allowed
-  res.status(405).json({ message: "Method Not Allowed" });
-});
+
 // Create a new user
 router.post("/", async (req, res) => {
   const { email, password, first_name, last_name } = req.body;
@@ -81,18 +77,22 @@ router.put("/self", auth, async (req, res) => {
   try {
     const user = req.user; // Get the authenticated user from the auth middleware
 
-    const { firstName, lastName, password } = req.body;
+    const { firstName, lastName, password, email } = req.body;
 
     // Allowed fields for update
-    const allowedFields = ["firstName", "lastName", "password"];
+    const allowedFields = ["firstName", "lastName", "password", "email"];
+    console.log(req.body);
 
     // Validate that only allowed fields are being updated
     const updateFields = Object.keys(req.body);
-    const isValidUpdate = updateFields.every((field) =>
-      allowedFields.includes(field)
+    const isInValidUpdate = updateFields.every(
+      (field) => !allowedFields.includes(field)
     );
 
-    if (!isValidUpdate) {
+    console.log(updateFields);
+    console.log(isInValidUpdate);
+
+    if (user.email !== email || isInValidUpdate) {
       return res
         .status(400)
         .json({ message: "Invalid fields in request body" });
@@ -105,7 +105,7 @@ router.put("/self", auth, async (req, res) => {
 
     user.account_updated = new Date(); // Update the account_updated field
 
-    await user.save(); // Save the changes to the database
+    // await user.save(); // Save the changes to the database
 
     res.status(200).json({
       email: user.email,
@@ -117,6 +117,11 @@ router.put("/self", auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
+});
+// Catch-all for unsupported methods on /v1/user/self
+router.all("/self", (req, res) => {
+  res.set("Allow", "GET PUT"); // Specify which methods are allowed
+  res.status(405).json({ message: "Method Not Allowed" });
 });
 
 module.exports = router;
