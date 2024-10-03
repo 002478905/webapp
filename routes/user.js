@@ -82,11 +82,13 @@ router.put("/self", auth, async (req, res) => {
     // Allowed fields for update
     const allowedFields = ["firstName", "lastName", "password", "email"];
 
+
     // Validate that only allowed fields are being updated
     const updateFields = Object.keys(req.body);
     const isInValidUpdate = updateFields.every(
       (field) => !allowedFields.includes(field)
     );
+
 
     if (user.email !== email || isInValidUpdate) {
       return res
