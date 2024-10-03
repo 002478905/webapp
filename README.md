@@ -11,6 +11,10 @@ This project is a cloud-native backend API developed using **Node.js** and **Exp
   - `503 Service Unavailable` if the database connection fails.
   - `405 Method Not Allowed` for unsupported HTTP methods.
   - `400 Bad Request` if any payload is provided.
+- **User Management Endpoints**:
+  - Create a new user (`/v1/user`).
+  - Get user information (`/v1/user/self`).
+- **Secure Password Handling**: Passwords are hashed using **bcrypt** before storing in the database.
 - **No Caching**: The API response includes `Cache-Control: no-cache` and `Pragma: no-cache` headers to ensure that the responses are not cached.
 
 ## Prerequisites
