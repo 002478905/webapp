@@ -1,10 +1,22 @@
 const express = require("express");
 const { Client, Pool } = require("pg");
+const sequelize = require("./config/database");
+const User = require("./models/User");
+const userRoutes = require("./routes/user"); // Import the user routes
 
 const dotenv = require("dotenv");
 
 // Load environment variables from .env file
 dotenv.config();
+
+sequelize
+  .sync({ alter: true })
+  .then(() => {
+    console.log("Database synced successfully");
+  })
+  .catch((err) => {
+    console.error("Error syncing database:", err);
+  });
 
 const app = express();
 const PORT = 8080;
@@ -13,14 +25,6 @@ const PORT = 8080;
 app.use(express.json());
 
 //setting up the postgres connection
-
-// const client = new Client({
-//   user: process.env.DB_USER,
-//   host: process.env.DB_HOST,
-//   database: process.env.DB_NAME,
-//   password: process.env.DB_PASSWORD,
-//   port: process.env.DB_PORT || 5432,
-// });
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -62,6 +66,8 @@ app.all("/healthz", async (req, res) => {
     return res.status(503).send(); // Service Unavailable if DB connection fails
   }
 });
+// Register user routes with the `/api/users` path
+app.use("/api/users", userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
