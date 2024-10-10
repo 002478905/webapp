@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - dev # Adjust this to match the branches where you want the CI to run
+  workflow_dispatch:
+ 
 
 jobs:
   test:
