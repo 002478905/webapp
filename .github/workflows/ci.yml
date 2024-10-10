@@ -47,10 +47,10 @@ jobs:
 
       - name: Run Tests
         env:
-          DB_NAME:  ${{ secrets.DB_NAME }}
-          DB_USER:  ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: localhost  # Use the service name
+          DB_NAME: webapp
+          DB_USER: postgres
+          DB_PASSWORD: root
+          DB_HOST: postgres  # Use the service name
           POSTGRES_PORT: 5432  # Default PostgreSQL port
         run: |
           npm test --coverage
