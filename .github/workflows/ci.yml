@@ -50,6 +50,7 @@ jobs:
           psql -h postgres -U "${{ secrets.DB_USER }}" -d ${DB_NAME} -c "CREATE SCHEMA IF NOT EXISTS myschema;"
         env:
           DB_NAME: webapp
+          DB_USER: postgres
 
       - name: Run Tests
         env:
