@@ -87,8 +87,10 @@ jobs:
           DB_USER:  ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: localhost
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
         run: |
-          npm test -- --coverage
+          npm test --coverage
 
       - name: Upload coverage report
         if: success()
