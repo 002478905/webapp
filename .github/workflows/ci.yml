@@ -17,14 +17,45 @@ jobs:
       postgres:
         image: postgres:10.8
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT:  ${{ secrets.DB_PORT }}
+          DB_USER: $DB_USER
+          DB_PASSWORD: $DB_PASSWORD
+          DB_NAME: $DB_NAME
+          DB_PORT:  $DB_PORT
           
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
+      - name: Install PostgreSQL client
+        run: apt-get update && apt-get install -y postgresql-client
+
+      - name: Wait for PostgreSQL to be ready
+        env:
+          DB_USER: $DB_USER
+          DB_PASSWORD: $DB_PASSWORD
+          DB_NAME: $DB_NAME
+        run: |
+          echo "$DB_USER"
+          echo "$DB_PASSWORD"
+          echo "$DB_NAME"
+          until pg_isready -h postgres -p 5432 -U "$DB_USER"; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
+          
+          if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+            echo "One or more required environment variables are not set."
+            exit 1
+          fi
+
+          psql -h postgres -U postgres -c "CREATE DATABASE \"$DB_NAME\";"
+          psql -h postgres -U postgres -c "CREATE ROLE \"$DB_USER\" WITH LOGIN PASSWORD '$DB_PASSWORD';"
+          psql -h postgres -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
+      # - name: Create Database and User
+      #   run: |
+      #     psql -h postgres -U "$DB_USER" -c "CREATE DATABASE $DB_NAME;"
+      #     psql -h postgres -U "$DB_USER" -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASSWORD';"
+      #     psql -h postgres -U "$DB_USER" -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+      
       - uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -34,25 +65,14 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-      
-      - name: Install PostgreSQL client
-        run: apt-get update && apt-get install -y postgresql-client
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          until pg_isready -h postgres -p 5432 -U "${{ secrets.DB_USER }}"; do
-            echo "Waiting for PostgreSQL to be ready..."
-            sleep 2
-          done
-      
 
       - name: Run Tests
         env:
-          DB_NAME: webapp
-          DB_USER: postgres
-          DB_PASSWORD: root
-          DB_HOST: 192.168.10.1  # Use the service name
-          DB_PORT: 5432  # Default PostgreSQL port
+          DB_USER: $DB_USER
+          DB_PASSWORD: $DB_PASSWORD
+          DB_NAME: $DB_NAME
+          DB_PORT:  $DB_PORT
+          DB_HOST: postgres  # Use the service name
         run: |
           npm test --coverage
 
