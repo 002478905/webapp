@@ -4,9 +4,8 @@ on:
   pull_request:
     branches:
       - main
-      - dev # Adjust this to match the branches where you want the CI to run
+      - dev
   workflow_dispatch:
- 
 
 jobs:
   test:
@@ -22,7 +21,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U $POSTGRES_USER" 
+          --health-cmd="pg_isready -U ${{ secrets.DB_USER }}" 
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -38,16 +37,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Set up PostgreSQL database
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
       - name: Run Tests
         env:
-          DB_USER: postgres
-          DB_PASSWORD: password
-          DB_NAME: your_database_name
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         run: |
           npm test -- --coverage
 
