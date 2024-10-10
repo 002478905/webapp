@@ -4,55 +4,94 @@ on:
   pull_request:
     branches:
       - main
-      - dev
-  workflow_dispatch:
+      - dev # Adjust this to match the branches where you want the CI to run
+  # workflow_dispatch:
 
 jobs:
-  test:
+  container-job:
     runs-on: ubuntu-latest
+
+    # runs all of the steps inside the specified container rather than on the VM host.
+    # Because of this the network configuration changes from host based network to a container network.
+    container:
+      image: node:latest
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:10.8
         env:
           POSTGRES_USER: ${{ secrets.DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U $POSTGRES_USER" 
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v1
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20.x"
+          node-version: "latest"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Set up PostgreSQL client
+      - name: Set up PostgreSQL database
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Run Tests
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: |
-          npm test -- --coverage
+          # use postgres for the host here because we have specified a container for the job.
+          # If we were running the job on the VM this would be localhost
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
 
-      - name: Upload coverage report
-        if: success()
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage
+    # services:
+    #   postgres:
+    #     image: postgres:13
+    #     env:
+    #       POSTGRES_USER: ${{ secrets.DB_USER }}
+    #       POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+    #       POSTGRES_DB: ${{ secrets.DB_NAME }}
+    #     ports:
+    #       - 5432:5432
+    #     options: >-
+
+    #       --health-interval=10s
+    #       --health-timeout=5s
+    #       --health-retries=5
+
+    # steps:
+    #   - uses: actions/checkout@v3
+
+    # - name: Set up Node.js
+    #   uses: actions/setup-node@v3
+    #   with:
+    #     node-version: "20.x"
+
+    # - name: Install dependencies
+    #   run: npm install
+
+    # - name: Set up PostgreSQL database
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y postgresql-client
+
+    #   - name: Run Tests
+    #     env:
+    #       DB_USER: postgres
+    #       DB_PASSWORD: password
+    #       DB_NAME: your_database_name
+    #     run: |
+    #       npm test -- --coverage
+
+    #   - name: Upload coverage report
+    #     if: success()
+    #     uses: actions/upload-artifact@v2
+    #     with:
+    #       name: coverage-report
+    #       path: coverage
