@@ -4,15 +4,12 @@ on:
   pull_request:
     branches:
       - main
-      - dev # Adjust this to match the branches where you want the CI to run
-  # workflow_dispatch:
+      - dev
 
 jobs:
   container-job:
     runs-on: ubuntu-latest
 
-    # runs all of the steps inside the specified container rather than on the VM host.
-    # Because of this the network configuration changes from host based network to a container network.
     container:
       image: node:latest
 
@@ -25,45 +22,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
-    # steps:
-    #   - uses: actions/checkout@v1
-
-    #   - name: Set up Node.js
-    #     uses: actions/setup-node@v3
-    #     with:
-    #       node-version: "latest"
-
-    #   - name: Install dependencies
-    #     run: npm install
-
-    #   - name: Set up PostgreSQL database
-    #     run: |
-    #       sudo apt-get update
-    #       sudo apt-get install -y postgresql-client
-
-    #     env:
-    #       # use postgres for the host here because we have specified a container for the job.
-    #       # If we were running the job on the VM this would be localhost
-    #       POSTGRES_HOST: postgres
-    #       POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
-
-    # services:
-    #   postgres:
-    #     image: postgres:13
-    #     env:
-    #       POSTGRES_USER: ${{ secrets.DB_USER }}
-    #       POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-    #       POSTGRES_DB: ${{ secrets.DB_NAME }}
-    #     ports:
-    #       - 5432:5432
-    #     options: >-
-
-    #       --health-interval=10s
-    #       --health-timeout=5s
-    #       --health-retries=5
 
     steps:
       - uses: actions/checkout@v3
@@ -76,19 +35,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Set up PostgreSQL database
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y postgresql-client
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h postgres -p 5432 -U ${{ secrets.DB_USER }}; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
 
       - name: Run Tests
         env:
           DB_NAME:  ${{ secrets.DB_NAME }}
           DB_USER:  ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: localhost
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+          DB_HOST: postgres  # Use the service name
+          POSTGRES_PORT: 5432  # Default PostgreSQL port
         run: |
           npm test --coverage
 
@@ -97,4 +57,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
-          path: coverage
+          path: coverage
