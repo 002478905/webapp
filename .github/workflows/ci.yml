@@ -76,18 +76,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Set up PostgreSQL database
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      # - name: Set up PostgreSQL database
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y postgresql-client
 
       - name: Run Tests
-        env:
-          # DB_USER: postgres
-          # DB_PASSWORD: password
-          # DB_NAME: your_database_name
-          POSTGRES_HOST: postgres
-          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
         run: |
           npm test -- --coverage
 
