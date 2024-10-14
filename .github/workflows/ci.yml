@@ -20,8 +20,8 @@ jobs:
           DB_USER: $DB_USER
           DB_PASSWORD: $DB_PASSWORD
           DB_NAME: $DB_NAME
-          DB_PORT:  $DB_PORT
-          
+          DB_PORT: $DB_PORT
+
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
@@ -41,7 +41,7 @@ jobs:
             echo "Waiting for PostgreSQL to be ready..."
             sleep 2
           done
-          
+
           if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
             echo "One or more required environment variables are not set."
             exit 1
@@ -55,7 +55,7 @@ jobs:
       #     psql -h postgres -U "$DB_USER" -c "CREATE DATABASE $DB_NAME;"
       #     psql -h postgres -U "$DB_USER" -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASSWORD';"
       #     psql -h postgres -U "$DB_USER" -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
-      
+
       - uses: actions/checkout@v3
 
       - name: Set up Node.js
@@ -71,8 +71,8 @@ jobs:
           DB_USER: $DB_USER
           DB_PASSWORD: $DB_PASSWORD
           DB_NAME: $DB_NAME
-          DB_PORT:  $DB_PORT
-          DB_HOST: postgres  # Use the service name
+          DB_PORT: $DB_PORT
+          DB_HOST: postgres # Use the service name
         run: |
           npm test --coverage
 
