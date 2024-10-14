@@ -9,7 +9,7 @@ describe("User Routes", () => {
 
   afterAll(async () => {
     await sequelize.close(); // Close database connection
-    // server.close(); // Close the server
+    server.close(); // Close the server
   });
 
   describe("POST /v1/user", () => {
