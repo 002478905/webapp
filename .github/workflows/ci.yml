@@ -89,7 +89,7 @@ jobs:
 
       # Initialize Packer
       - name: Initialize Packer
-        uses: packer init webapp-ami.pkr.hcl
+        run: packer init webapp-ami.pkr.hcl
 
       # Format Packer template
       - name: Format Packer template
