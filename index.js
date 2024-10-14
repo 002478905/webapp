@@ -75,8 +75,8 @@ app.all("/healthz", async (req, res) => {
 // Register user routes with the /api/users path
 app.use("/v1/user", userRoutes);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-module.exports = app;
+module.exports = server;
