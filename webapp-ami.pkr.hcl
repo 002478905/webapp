@@ -26,6 +26,7 @@ source "amazon-ebs" "ubuntu" {
     owners      = ["557690620867"] # Canonical
   }
   ssh_username = "ubuntu"
+  vpc_id ="vpc-0f9abfd047eeac78c"
 }
 
 build {
