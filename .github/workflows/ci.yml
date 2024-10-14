@@ -82,3 +82,19 @@ jobs:
         with:
           name: coverage-report
           path: coverage
+
+          # Install Packer
+      - name: Install Packer
+        uses: hashicorp/setup-packer@main
+
+      # Initialize Packer
+      - name: Initialize Packer
+        uses: packer init webapp-ami.pkr.hcl
+
+      # Format Packer template
+      - name: Format Packer template
+        run: packer fmt webapp-ami.pkr.hcl
+
+      # Validate Packer template
+      - name: Validate Packer template
+        run: packer validate webapp-ami.pkr.hcl
