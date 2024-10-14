@@ -74,7 +74,7 @@ jobs:
           DB_PORT: $DB_PORT
           DB_HOST: postgres # Use the service name
         run: |
-          npm test --runInBand --detectOpenHandles --forceExit --coverage
+          npm test
 
       - name: Upload coverage report
         if: success()
