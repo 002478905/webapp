@@ -13,7 +13,7 @@ variable "aws_region" {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "my-nodejs-postgres-app-{{timestamp}}"
+  ami_name      = "csye6225-coursework-${formatdate("YYYY-MM-DD-hh-mm-ss", timestamp())}"
   instance_type = "t2.micro"
   region        = var.aws_region
   source_ami_filter {
@@ -26,52 +26,38 @@ source "amazon-ebs" "ubuntu" {
     owners      = ["557690620867"] # Canonical
   }
   ssh_username = "ubuntu"
+  vpc_id ="vpc-0f9abfd047eeac78c"
 }
 
 build {
-  sources = ["source.amazon-ebs.ubuntu"]
+  name = "csye6225-coursework"
+  sources = [
+    "source.amazon-ebs.ubuntu"
+  ]
 
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
-      "sudo apt-get install -y nodejs npm postgresql postgresql-contrib",
-      "sudo systemctl enable postgresql",
-      "sudo systemctl start postgresql",
-      "sudo -u postgres psql -c \"CREATE USER postgres WITH PASSWORD 'root';\"",
-      "sudo -u postgres psql -c \"CREATE DATABASE webapp OWNER postgres;\"",
-      "sudo npm install -g pm2"
-    ]
-  }
-
-  # Instead of using a file provisioner for .env, we create it using shell commands
-  provisioner "shell" {
-    inline = [
-      "echo 'DB_USER=${DB_USER}' >> /home/ubuntu/app/.env",
-      "echo 'DB_PASSWORD=${DB_PASSWORD}' >> /home/ubuntu/app/.env",
-      "echo 'DB_NAME=${DB_NAME}' >> /home/ubuntu/app/.env",
-      "echo 'DB_HOST=${DB_HOST}' >> /home/ubuntu/app/.env",
-      "echo 'DB_PORT=${DB_PORT}' >> /home/ubuntu/app/.env"
-    ]
-    environment_vars = [
-      "DB_USER=${DB_USER}",
-      "DB_PASSWORD=${DB_PASSWORD}",
-      "DB_NAME=${DB_NAME}",
-      "DB_HOST=${DB_HOST}",
-      "DB_PORT=${DB_PORT}"
+      "sudo apt-get upgrade -y",
+      "sudo apt-get install -y nodejs npm mysql-server",
+      "sudo systemctl enable mysql",
+      "sudo systemctl start mysql"
     ]
   }
 
   provisioner "file" {
     source      = "./"
-    destination = "/home/ubuntu/app"
+    destination = "/home/ubuntu/webapp"
   }
 
   provisioner "shell" {
     inline = [
-      "cd /home/ubuntu/app",
+      "cd /home/ubuntu/webapp",
       "npm install",
-      "sudo pm2 startup systemd",
-      "pm2 start index.js",
+      "sudo npm install -g pm2",
+      "pm2 startup systemd",
+      "sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu",
+      "pm2 start app.js",
       "pm2 save"
     ]
   }
