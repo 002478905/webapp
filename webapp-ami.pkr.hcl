@@ -23,10 +23,10 @@ source "amazon-ebs" "ubuntu" {
       virtualization-type = "hvm"
     }
     most_recent = true
-    owners      = ["557690620867"] # Canonical
+    owners      = ["557690620867"] # Canonical's owner ID
   }
   ssh_username = "ubuntu"
-  vpc_id ="vpc-0f9abfd047eeac78c"
+  vpc_id       = "vpc-0f9abfd047eeac78c"
 }
 
 build {
