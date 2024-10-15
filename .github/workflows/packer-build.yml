@@ -1,0 +1,40 @@
+name: Build Packer Custom Image
+
+# Trigger the workflow only when code is merged into the main or dev branch
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Configure AWS credentials using the GitHub secrets
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Install Packer
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          packer_version: latest
+
+      # Initialize Packer plugins
+      - name: Initialize Packer Plugins
+        run: |
+          packer init ./webapp-ami.pkr.hcl
+
+      # Run packer build to create the custom AMI
+      - name: Build Custom Packer Image
+        run: |
+          packer build ./webapp-ami.pkr.hcl
