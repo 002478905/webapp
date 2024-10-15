@@ -76,6 +76,7 @@ jobs:
           path: coverage
 
   packer-check:
+    needs: container-job
     runs-on: ubuntu-latest
 
     steps:
