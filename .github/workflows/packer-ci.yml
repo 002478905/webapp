@@ -19,14 +19,17 @@ jobs:
         with:
           packer_version: latest
 
+      # Step to initialize Packer plugins
+      - name: Initialize Packer Plugins
+        run: |
+          packer init ./webapp-ami.pkr.hcl
+
       # Step to run `packer fmt` to ensure formatting
       - name: Run Packer Fmt
         run: |
           packer fmt -check ./webapp-ami.pkr.hcl
-        continue-on-error: false
 
       # Step to run `packer validate` to ensure template is valid
       - name: Run Packer Validate
         run: |
           packer validate ./webapp-ami.pkr.hcl
-        continue-on-error: false
