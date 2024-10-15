@@ -94,6 +94,11 @@ jobs:
       - name: Format Packer template
         run: packer fmt webapp-ami.pkr.hcl
 
+      - name: Create Packer variables file
+        run: |
+          echo 'artifact_path = "webapp.zip"' > variables.pkrvars.hcl
+
       # Validate Packer template
       - name: Validate Packer template
-        run: packer validate webapp-ami.pkr.hcl
+        id: validate
+        run: packer validate -var "artifact_path=webapp.zip" webapp.pkr.hcl
