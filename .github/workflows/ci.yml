@@ -83,6 +83,9 @@ jobs:
           name: coverage-report
           path: coverage
 
+      - name: App artifact
+        run: zip -r package.json config coverage middleware models routes index.js package-lock.json
+
       - name: Install Packer
         uses: hashicorp/setup-packer@main
 
