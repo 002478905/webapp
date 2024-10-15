@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest  --runInBand --detectOpenHandles --forceExit --coverage"
+    "test": "jest  --runInBand --detectOpenHandles --forceExit --coverage",
+    "build": "tsc",
+    "test:integration": "jest --config jest.config.js --testPathPattern=__tests__/integration"
   },
   "author": "",
   "license": "ISC",
