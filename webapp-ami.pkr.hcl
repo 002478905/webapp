@@ -53,7 +53,7 @@ build {
   }
 
   provisioner "file" {
-    source      = "webapp.zip"
+    source      = var.artifact_path
     destination = "/tmp/webapp.zip"
   }
 
