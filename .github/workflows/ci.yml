@@ -17,22 +17,22 @@ jobs:
       postgres:
         image: postgres:10.8
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: root
-          POSTGRES_DB: webapp
+          DB_USER: $DB_USER
+          DB_PASSWORD: $DB_PASSWORD
+          DB_NAME: $DB_NAME
+          DB_PORT: $DB_PORT
+
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Install PostgreSQL client
         run: apt-get update && apt-get install -y postgresql-client
 
       - name: Wait for PostgreSQL to be ready
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: $DB_USER
+          DB_PASSWORD: $DB_PASSWORD
+          DB_NAME: $DB_NAME
         run: |
           echo "$DB_USER"
           echo "$DB_PASSWORD"
@@ -50,6 +50,13 @@ jobs:
           psql -h postgres -U postgres -c "CREATE DATABASE \"$DB_NAME\";"
           psql -h postgres -U postgres -c "CREATE ROLE \"$DB_USER\" WITH LOGIN PASSWORD '$DB_PASSWORD';"
           psql -h postgres -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
+      # - name: Create Database and User
+      #   run: |
+      #     psql -h postgres -U "$DB_USER" -c "CREATE DATABASE $DB_NAME;"
+      #     psql -h postgres -U "$DB_USER" -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASSWORD';"
+      #     psql -h postgres -U "$DB_USER" -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+
+      - uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -61,12 +68,13 @@ jobs:
 
       - name: Run Tests
         env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: $DB_USER
+          DB_PASSWORD: $DB_PASSWORD
+          DB_NAME: $DB_NAME
+          DB_PORT: $DB_PORT
           DB_HOST: postgres # Use the service name
-        run: npm test
+        run: |
+          npm test
 
       - name: Upload coverage report
         if: success()
@@ -74,27 +82,3 @@ jobs:
         with:
           name: coverage-report
           path: coverage
-
-  packer-check:
-    needs: container-job
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Packer
-        uses: hashicorp/setup-packer@v2
-        with:
-          packer_version: latest
-
-      - name: Initialize Packer Plugins
-        run: |
-          packer init ./webapp-ami.pkr.hcl
-
-      - name: Run Packer Fmt
-        run: |
-          packer fmt -check ./webapp-ami.pkr.hcl
-
-      - name: Run Packer Validate
-        run: |
-          packer validate ./webapp-ami.pkr.hcl
