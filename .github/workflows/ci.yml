@@ -101,4 +101,4 @@ jobs:
       # Validate Packer template
       - name: Validate Packer template
         id: validate
-        run: packer validate -var "artifact_path=webapp.zip" webapp.pkr.hcl
+        run: packer validate -var "artifact_path=webapp.zip" webapp-ami.pkr.hcl
