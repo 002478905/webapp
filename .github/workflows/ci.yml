@@ -53,7 +53,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-          DB_HOST: postgres # Use the service name
+          DB_HOST: postgres
           DB_PORT: ${{ secrets.DB_PORT }}
         run: npm test
 
@@ -84,5 +84,11 @@ jobs:
           packer fmt -check ./webapp-ami.pkr.hcl
 
       - name: Run Packer Validate
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
           packer validate ./webapp-ami.pkr.hcl

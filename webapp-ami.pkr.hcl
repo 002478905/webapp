@@ -43,9 +43,22 @@ build {
     ]
   }
 
-  provisioner "file" {
-    source      = "./.env"
-    destination = "/home/ubuntu/app/.env"
+  # Instead of using a file provisioner for .env, we create it using shell commands
+  provisioner "shell" {
+    inline = [
+      "echo 'DB_USER=${DB_USER}' >> /home/ubuntu/app/.env",
+      "echo 'DB_PASSWORD=${DB_PASSWORD}' >> /home/ubuntu/app/.env",
+      "echo 'DB_NAME=${DB_NAME}' >> /home/ubuntu/app/.env",
+      "echo 'DB_HOST=${DB_HOST}' >> /home/ubuntu/app/.env",
+      "echo 'DB_PORT=${DB_PORT}' >> /home/ubuntu/app/.env"
+    ]
+    environment_vars = [
+      "DB_USER=${DB_USER}",
+      "DB_PASSWORD=${DB_PASSWORD}",
+      "DB_NAME=${DB_NAME}",
+      "DB_HOST=${DB_HOST}",
+      "DB_PORT=${DB_PORT}"
+    ]
   }
 
   provisioner "file" {
@@ -58,7 +71,7 @@ build {
       "cd /home/ubuntu/app",
       "npm install",
       "sudo pm2 startup systemd",
-      "pm2 start index.js", # Ensure this points to your main file
+      "pm2 start index.js",
       "pm2 save"
     ]
   }
