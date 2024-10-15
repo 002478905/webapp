@@ -11,6 +11,10 @@ variable "aws_region" {
   type    = string
   default = "us-east-1"
 }
+variable "artifact_path" {
+  type    = string
+  default = "webapp.zip"
+}
 
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-coursework-${formatdate("YYYY-MM-DD-hh-mm-ss", timestamp())}"
