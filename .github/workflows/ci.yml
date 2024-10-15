@@ -23,6 +23,9 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Install PostgreSQL client
         run: apt-get update && apt-get install -y postgresql-client
 
@@ -37,8 +40,6 @@ jobs:
           psql -h postgres -U postgres -c "CREATE ROLE \"$DB_USER\" WITH LOGIN PASSWORD '$DB_PASSWORD';"
           psql -h postgres -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
 
-      - uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -49,11 +50,11 @@ jobs:
 
       - name: Run Tests
         env:
-          DB_USER: $DB_USER
-          DB_PASSWORD: $DB_PASSWORD
-          DB_NAME: $DB_NAME
-          DB_PORT: $DB_PORT
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
           DB_HOST: postgres # Use the service name
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: npm test
 
       - name: Upload coverage report
