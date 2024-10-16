@@ -12,11 +12,6 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "artifact" {
-  type    = string
-  default = "app.zip"
-}
-
 source "amazon-ebs" "ubuntu" {
   ami_name      = "csye6225-coursework-${formatdate("YYYY-MM-DD-hh-mm-ss", timestamp())}"
   instance_type = "t2.micro"
@@ -28,47 +23,42 @@ source "amazon-ebs" "ubuntu" {
       virtualization-type = "hvm"
     }
     most_recent = true
-    owners      = ["557690620867"]
+    owners      = ["557690620867"] # Canonical's owner ID
   }
   ssh_username = "ubuntu"
+  vpc_id       = "vpc-0f9abfd047eeac78c"
 }
 
 build {
   name = "csye6225-coursework"
-  sources = ["source.amazon-ebs.ubuntu"]
+  sources = [
+    "source.amazon-ebs.ubuntu"
+  ]
 
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
       "sudo apt-get upgrade -y",
-      "sudo apt-get install -y nodejs npm mysql-server"
+      "sudo apt-get install -y nodejs npm mysql-server",
+      "sudo systemctl enable mysql",
+      "sudo systemctl start mysql"
     ]
   }
 
-  # Create a non-login user and group
-  provisioner "shell" {
-    inline = [
-      "sudo groupadd csye6225",
-      "sudo useradd -g csye6225 -s /usr/sbin/nologin csye6225",
-      "sudo mkdir -p /home/csye6225/webapp",
-      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp"
-    ]
-  }
-
-  # Copy application artifact
   provisioner "file" {
-    source = var.artifact
-    destination = "/home/csye6225/webapp/app.zip"
+    source      = "./"
+    destination = "/home/ubuntu/webapp"
   }
 
-  # Unzip application artifact, set permissions, and configure service
   provisioner "shell" {
     inline = [
-      "sudo unzip /home/csye6225/webapp/app.zip -d /home/csye6225/webapp/",
-      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
-      "sudo cp /home/csye6225/webapp/myapp.service /etc/systemd/system/",
-      "sudo systemctl daemon-reload",
-      "sudo systemctl enable myapp.service"
+      "cd /home/ubuntu/webapp",
+      "npm install",
+      "sudo npm install -g pm2",
+      "pm2 startup systemd",
+      "sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu",
+      "pm2 start app.js",
+      "pm2 save"
     ]
   }
 }
