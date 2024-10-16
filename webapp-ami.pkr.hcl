@@ -59,26 +59,5 @@ build {
     "source.amazon-ebs.my-ami",
   ]
 
-  provisioner "shell" {
-    script = "updateOs.sh"
-  }
 
-  provisioner "shell" {
-    script = "appDirSetup.sh"
-  }
-
-  provisioner "file" {
-    source      = "app.properties"
-    destination = "/tmp/app.properties"
-  }
-
-  provisioner "file" {
-    source      = "app"
-    destination = "/tmp/app"
-  }
-
-  provisioner "file" {
-    source      = "app.service"
-    destination = "/tmp/app.service"
-  }
 }
