@@ -27,7 +27,6 @@ variable "subnet_id" {
   default = "subnet-0eb60cf3e6d3319d4"
 }
 
-
 source "amazon-ebs" "my-ami" {
   region          = "${var.aws_region}"
   ami_name        = "csye6225-coursework-${formatdate("YYYY_MM_DD", timestamp())}"
@@ -55,44 +54,31 @@ source "amazon-ebs" "my-ami" {
   }
 }
 
-
 build {
   sources = [
     "source.amazon-ebs.my-ami",
   ]
-//   provisioner "shell" {
-//     environment_vars = [
-//       "DEBIAN_FRONTEND=noninteractive",
-//       "CHECKPOINT_DISABLE=1"
-//     ]
 
-//     inline = [
-//       "sudo apt-get update",
-//       "sudo apt-get upgrade -y",
-//       "sudo apt-get install nginx -y",
-//       "sudo apt-get clean",
-//     ]
-//   }
-// }
+  provisioner "shell" {
+    script = "updateOs.sh"
+  }
 
-provisioner "shell"{
-  script ="updateOs.sh"
-}
-provisioner "shell"{
-  script ="appDirSetup.sh"
-}
-provisioner "file" {
-  source      = "app.properties"
-  destination = "/tmp/app.properties"
-}
+  provisioner "shell" {
+    script = "appDirSetup.sh"
+  }
 
-provisioner "file" {
-  source      = "app"
-  destination = "/tmp/app"
-}
+  provisioner "file" {
+    source      = "app.properties"
+    destination = "/tmp/app.properties"
+  }
 
-provisioner "file" {
-  source      = "app.service"
-  destination = "/tmp/app.service"
-}
+  provisioner "file" {
+    source      = "app"
+    destination = "/tmp/app"
+  }
 
+  provisioner "file" {
+    source      = "app.service"
+    destination = "/tmp/app.service"
+  }
+}
