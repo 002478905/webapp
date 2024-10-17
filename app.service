@@ -3,7 +3,7 @@ Description=My Application
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Replace with your main entry point
+ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Adjust this path as needed
 Restart=always
 User=csye6225
 Group=csye6225
