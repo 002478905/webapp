@@ -14,7 +14,7 @@ variable "aws_region" {
 
 variable "source_ami" {
   type    = string
-  default = "ami-0866a3c8686eaeeba"  # Ubuntu 24.04 LTS
+  default = "ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
 }
 
 variable "ssh_username" {
@@ -61,7 +61,7 @@ build {
 
   # Step 1: Copy the application zip file to the instance
   provisioner "file" {
-    source      = "./application.zip"  # Ensure the application zip is built and available
+    source      = "./application.zip" # Ensure the application zip is built and available
     destination = "/home/ubuntu/application.zip"
   }
 
@@ -89,7 +89,7 @@ build {
 
   # Step 7: Add systemd service to run the web application
   provisioner "file" {
-    source      = "./app.service"  # Make sure your app.service file is available
+    source      = "./app.service" # Make sure your app.service file is available
     destination = "/etc/systemd/system/app.service"
   }
 
