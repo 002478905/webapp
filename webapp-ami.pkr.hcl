@@ -1,3 +1,8 @@
+variable "artifact_path" {
+  type    = string
+  default = "application.zip"
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -61,7 +66,7 @@ build {
 
   # Step 1: Copy the application zip file to the instance
   provisioner "file" {
-    source      = "./application.zip" # Ensure the application zip is built and available
+    source      = var.artifact_path # Ensure the application zip is built and available
     destination = "/home/ubuntu/application.zip"
   }
 

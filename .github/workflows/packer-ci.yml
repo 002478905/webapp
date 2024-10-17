@@ -24,6 +24,10 @@ jobs:
         run: |
           packer init ./webapp-ami.pkr.hcl
 
+      - name: Create Packer variables file
+        run: |
+          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
+
       # Step to run `packer fmt` to ensure formatting
       - name: Run Packer Fmt
         run: |
