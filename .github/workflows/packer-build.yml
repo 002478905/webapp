@@ -48,4 +48,6 @@ jobs:
           packer_version: latest
 
       - name: Build Custom Packer Image
-        run: packer build ./webapp-ami.pkr.hcl
+        run: |
+          packer init .
+          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
