@@ -29,6 +29,27 @@ jobs:
         run: |
           packer fmt -check ./webapp-ami.pkr.hcl
 
+          - name: Install dependencies
+          run: npm install
+
+      - name: Run Integration Tests
+        run: npm test
+
+      - name: Build Application Artifact
+        run: |
+          npm run build
+          zip -r application.zip .
+
+      - name: Verify Artifact
+        run: |
+          if [ ! -f ./application.zip ]; then
+            echo "Error: application.zip not found!"
+            exit 1
+          fi
+
+      - name: List Directory Contents
+        run: ls -la
+
       # Step to run `packer validate` to ensure template is valid
       - name: Run Packer Validate
         run: |
