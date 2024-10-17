@@ -1,19 +1,19 @@
 [Unit]
-Description=My-CSYE-6225-App
-ConditionPathExists=/opt/myapp/application.properties
+Description=My Application
 After=network.target
 
 [Service]
-Type=simple
 User=csye6225
 Group=csye6225
-WorkingDirectory=/opt/myapp
-ExecStart=/opt/myapp/app
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment="DB_HOST=localhost"
+Environment="DB_USER=postgres"
+Environment="DB_PASSWORD=root"
+Environment="DB_NAME=webapp"
+Environment="DB_PORT=5432"
+WorkingDirectory=/home/csye6225/webapp
+ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Adjust this path as needed
 Restart=always
-RestartSec=3
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=csye6225
 
 [Install]
 WantedBy=multi-user.target

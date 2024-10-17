@@ -23,13 +23,33 @@ jobs:
       - name: Initialize Packer Plugins
         run: |
           packer init ./webapp-ami.pkr.hcl
-
+      - name: Create Packer variables file
+        run: |
+          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
       # Step to run `packer fmt` to ensure formatting
       - name: Run Packer Fmt
         run: |
-          packer fmt -check ./webapp-ami.pkr.hcl
+          packer fmt ./webapp-ami.pkr.hcl
+      - name: Install dependencies
+        run: npm install
+
+      # - name: Run Integration Tests
+      #   run: npm test
+
+      - name: Build Application Artifact
+        run: |
+          npm run build
+          zip -r application.zip .
+      - name: Verify Artifact
+        run: |
+          if [ ! -f ./application.zip ]; then
+            echo "Error: application.zip not found!"
+            exit 1
+          fi
+      - name: List Directory Contents
+        run: ls -la
 
       # Step to run `packer validate` to ensure template is valid
-      - name: Run Packer Validate
-        run: |
-          packer validate ./webapp-ami.pkr.hcl
+      - name: Validate Packer template
+        id: validate
+        run: packer validate -var "artifact_path=application.zip" webapp-ami.pkr.hcl

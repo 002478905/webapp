@@ -1,25 +1,40 @@
-name: Build Packer Custom Image
+name: Build and Deploy Application
 
-# Trigger the workflow only when code is merged into the main or dev branch
 on:
-  push:
+  pull_request:
     branches:
       - main
       - dev
 
 jobs:
-  build-image:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug Secrets
-        run: |
-          echo "AWS_REGION: ${{ secrets.AWS_REGION }}"
+      - name: Install dependencies
+        run: npm install
 
-      # Configure AWS credentials using the GitHub secrets
+      # - name: Run Integration Tests
+      #   run: npm test
+
+      - name: Build Application Artifact
+        run: |
+          npm run build
+          zip -r application.zip .
+
+      - name: Verify Artifact
+        run: |
+          if [ ! -f ./application.zip ]; then
+            echo "Error: application.zip not found!"
+            exit 1
+          fi
+
+      - name: List Directory Contents
+        run: ls -la
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -27,18 +42,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
-      # Install Packer
       - name: Install Packer
         uses: hashicorp/setup-packer@v2
         with:
           packer_version: latest
 
-      # Initialize Packer plugins
-      - name: Initialize Packer Plugins
+      - name: Create Packer variables file
         run: |
-          packer init ./webapp-ami.pkr.hcl
+          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
 
-      # Run packer build to create the custom AMI
       - name: Build Custom Packer Image
         run: |
-          packer build ./webapp-ami.pkr.hcl
+          packer init .
+          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
