@@ -19,7 +19,7 @@ variable "aws_region" {
 
 variable "source_ami" {
   type    = string
-  default = "ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
+  default = "ami-0866a3c8686eaeeba"  # Ubuntu 24.04 LTS
 }
 
 variable "ssh_username" {
@@ -66,7 +66,7 @@ build {
 
   # Step 1: Copy the application zip file to the instance
   provisioner "file" {
-    source      = var.artifact_path # Ensure the application zip is built and available
+    source      = var.artifact_path
     destination = "/home/ubuntu/application.zip"
   }
 
@@ -76,30 +76,28 @@ build {
       "sudo apt-get update",
       "sudo apt-get install -y postgresql postgresql-contrib unzip",
 
-      # Step 3: Create user csye6225 with no login
-      "sudo useradd -M -s /usr/sbin/nologin csye6225",
+      # Step 3: Create user `csye6225` with no login
+      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",  # Ignore error if the user already exists
 
-      # Step 4: Set up PostgreSQL (this can be adjusted depending on your needs)
+      # Step 4: Set up PostgreSQL (create role and database)
       "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'password';\"",
       "sudo -u postgres psql -c \"CREATE DATABASE myappdb WITH OWNER csye6225;\"",
 
       # Step 5: Create directories and unzip the application
       "sudo mkdir -p /home/csye6225/webapp",
-      "sudo unzip /home/ubuntu/ .zip -d /home/csye6225/webapp",
+      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",  # Corrected path
 
-      # Step 6: Set ownership to the user and group csye6225
+      # Step 6: Set ownership to the user and group `csye6225`
       "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
-      "sudo mv /home/csye6225/app/app.service /etc/systemd/system/",
+
+      # Step 7: Ensure the app.service file exists before moving
+      "if [ -f /home/csye6225/webapp/app.service ]; then sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/; fi",
+
+      # Reload systemd daemon and enable the service
       "sudo systemctl daemon-reload",
       "sudo systemctl enable app"
     ]
   }
-
-  # Step 7: Add systemd service to run the web application
-  // provisioner "file" {
-  //   source      = "./app.service" # Make sure your app.service file is available
-  //   destination = "/etc/systemd/system/app.service"
-  // }
 
   # Step 8: Reload systemd, enable, and start the service
   provisioner "shell" {
