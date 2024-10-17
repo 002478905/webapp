@@ -14,23 +14,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "14" # You can adjust this version based on your project requirements
-
       - name: Install dependencies
         run: npm install
 
       - name: Build Application Artifact
         run: |
+          npm run build
           zip -r application.zip .  # This will generate a zip file of the application in the current directory
-          mkdir -p artifact-dir
-          mv application.zip artifact-dir/
 
       - name: Check if zip file exists
         run: |
-          if [ ! -f ./artifact-dir/application.zip ]; then
+          if [ ! -f ./application.zip ]; then
             echo "Zip file not found!"
             exit 1
           fi
