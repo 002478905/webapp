@@ -88,15 +88,18 @@ build {
       "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",
 
       # Step 6: Set ownership to the user and group `csye6225`
-      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp"
+      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
+      "sudo mv /home/csye6225/app/app.service /etc/systemd/system/",
+      "sudo systemctl daemon-reload",
+      "sudo systemctl enable app"
     ]
   }
 
   # Step 7: Add systemd service to run the web application
-  provisioner "file" {
-    source      = "./app.service" # Make sure your app.service file is available
-    destination = "/etc/systemd/system/app.service"
-  }
+  // provisioner "file" {
+  //   source      = "./app.service" # Make sure your app.service file is available
+  //   destination = "/etc/systemd/system/app.service"
+  // }
 
   # Step 8: Reload systemd, enable, and start the service
   provisioner "shell" {
