@@ -14,24 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Create a zip file for the application
       - name: Create Application Zip
         run: |
-          zip -r application.zip . -x "*.git*" "node_modules/*" # Exclude unnecessary files
-
-      # Upload the built zip file as an artifact (optional but useful for debugging)
-      - name: Upload Application Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: application-artifact
-          path: ./application.zip
-
-      # Download the application artifact for use in Packer (if needed)
-      - name: Download Application Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: application-artifact
-          path: ./artifact-dir
+          mkdir -p artifact-dir
+          zip -r artifact-dir/application.zip . -x "*.git*" "node_modules/*" # Create a zip excluding unnecessary files
 
       # Configure AWS credentials using the GitHub secrets
       - name: Configure AWS credentials
@@ -46,6 +32,16 @@ jobs:
         uses: hashicorp/setup-packer@v2
         with:
           packer_version: latest
+
+      # Initialize Packer plugins
+      - name: Initialize Packer Plugins
+        run: |
+          packer init ./webapp-ami.pkr.hcl
+
+      # Run Packer validate
+      - name: Validate Packer Template
+        run: |
+          packer validate ./webapp-ami.pkr.hcl
 
       # Run packer build to create the custom AMI
       - name: Build Custom Packer Image

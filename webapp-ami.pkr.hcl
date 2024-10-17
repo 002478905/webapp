@@ -59,12 +59,13 @@ build {
     "source.amazon-ebs.my-ami",
   ]
 
-  # Step to copy the zip file from the runner to the AMI
+  # Provisioner to copy the zip file from the runner to the AMI
   provisioner "file" {
-    source      = "./artifact-dir/application.zip" # Path where the zip was downloaded in the runner
+    source      = "./artifact-dir/application.zip" # Ensure the path matches where the zip is created
     destination = "/home/csye6225/webapp/application.zip"
   }
 
+  # Provisioner to unzip the file and set ownership to csye6225
   provisioner "shell" {
     inline = [
       "cd /home/csye6225/webapp",
@@ -72,6 +73,4 @@ build {
       "sudo chown -R csye6225:csye6225 /home/csye6225/webapp"
     ]
   }
-
-
 }
