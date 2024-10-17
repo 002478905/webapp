@@ -47,6 +47,10 @@ jobs:
         with:
           packer_version: latest
 
+      - name: Create Packer variables file
+        run: |
+          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
+
       - name: Build Custom Packer Image
         run: |
           packer init .
