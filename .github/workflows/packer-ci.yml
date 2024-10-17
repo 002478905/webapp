@@ -1,4 +1,4 @@
-name: Packer CI Workflow
+name: Build and Deploy Application
 
 on:
   pull_request:
@@ -7,31 +7,12 @@ on:
       - dev
 
 jobs:
-  packer-check:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Install Packer
-        uses: hashicorp/setup-packer@v2
-        with:
-          packer_version: latest
-
-      # Step to initialize Packer plugins
-      - name: Initialize Packer Plugins
-        run: |
-          packer init ./webapp-ami.pkr.hcl
-
-      - name: Create Packer variables file
-        run: |
-          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
-
-      # Step to run `packer fmt` to ensure formatting
-      - name: Run Packer Fmt
-        run: |
-          packer fmt ./webapp-ami.pkr.hcl
 
       - name: Install dependencies
         run: npm install
@@ -43,18 +24,31 @@ jobs:
         run: |
           npm run build
           zip -r application.zip .
-
       - name: Verify Artifact
         run: |
           if [ ! -f ./application.zip ]; then
             echo "Error: application.zip not found!"
             exit 1
           fi
-
       - name: List Directory Contents
         run: ls -la
 
-      # Step to run `packer validate` to ensure template is valid
-      - name: Validate Packer template
-        id: validate
-        run: packer validate -var "artifact_path=application.zip" webapp-ami.pkr.hcl
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          packer_version: latest
+
+      - name: Create Packer variables file
+        run: |
+          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
+      - name: Build Custom Packer Image
+        run: |
+          packer init .
+          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
