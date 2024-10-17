@@ -1,6 +1,5 @@
 name: Build Packer Custom Image
 
-# Trigger the workflow only when code is merged into the main or dev branch
 on:
   push:
     branches:
@@ -15,9 +14,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug Secrets
+      # Create a zip file for the application
+      - name: Create Application Zip
         run: |
-          echo "AWS_REGION: ${{ secrets.AWS_REGION }}"
+          zip -r application.zip . -x "*.git*" "node_modules/*" # Exclude unnecessary files
+
+      # Upload the built zip file as an artifact (optional but useful for debugging)
+      - name: Upload Application Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: application-artifact
+          path: ./application.zip
+
+      # Download the application artifact for use in Packer (if needed)
+      - name: Download Application Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: application-artifact
+          path: ./artifact-dir
 
       # Configure AWS credentials using the GitHub secrets
       - name: Configure AWS credentials
@@ -32,11 +46,6 @@ jobs:
         uses: hashicorp/setup-packer@v2
         with:
           packer_version: latest
-
-      # Initialize Packer plugins
-      - name: Initialize Packer Plugins
-        run: |
-          packer init ./webapp-ami.pkr.hcl
 
       # Run packer build to create the custom AMI
       - name: Build Custom Packer Image

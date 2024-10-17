@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest  --runInBand --detectOpenHandles --forceExit --coverage"
+    "test": "jest  --runInBand --detectOpenHandles --forceExit --coverage",
+    "build": "echo 'No build step required'"
   },
   "author": "",
   "license": "ISC",

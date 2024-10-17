@@ -1,19 +1,14 @@
 [Unit]
-Description=My-CSYE-6225-App
-ConditionPathExists=/opt/myapp/application.properties
+Description=My Application
 After=network.target
 
 [Service]
-Type=simple
+ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Replace with your main entry point
+Restart=always
 User=csye6225
 Group=csye6225
-WorkingDirectory=/opt/myapp
-ExecStart=/opt/myapp/app
-Restart=always
-RestartSec=3
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=csye6225
+Environment=PATH=/usr/bin:/usr/local/bin
+WorkingDirectory=/home/csye6225/webapp
 
 [Install]
 WantedBy=multi-user.target
