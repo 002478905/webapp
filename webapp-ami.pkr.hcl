@@ -34,7 +34,7 @@ variable "subnet_id" {
 
 source "amazon-ebs" "my-ami" {
   region          = var.aws_region
-  ami_name        = "csye6225-coursework-${formatdate("YYYY_MM_DD", timestamp())}"
+  ami_name        = "csye6225-coursework-${formatdate("YYYY_MM_DD-hh-mm-ss", timestamp())}"
   ami_description = "Custom AMI for CSYE 6225 Web Application"
 
   ami_regions = [
