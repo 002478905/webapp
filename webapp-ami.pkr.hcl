@@ -61,7 +61,7 @@ build {
 
   # Provisioner to copy the zip file from the runner to the AMI
   provisioner "file" {
-    source      = "./artifact-dir/application.zip" # Ensure the path matches where the zip is created
+    source      = "./application.zip" # Ensure the path matches where the zip is created
     destination = "/home/csye6225/webapp/application.zip"
   }
 

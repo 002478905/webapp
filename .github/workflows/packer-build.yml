@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - dev
-
 jobs:
   build-image:
     runs-on: ubuntu-latest
@@ -14,12 +13,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Create Application Zip
-        run: |
-          mkdir -p artifact-dir
-          zip -r artifact-dir/application.zip . -x "*.git*" "node_modules/*" # Create a zip excluding unnecessary files
+      - name: Install dependencies
+        run: npm install
 
-      # Configure AWS credentials using the GitHub secrets
+      - name: Build Application Artifact
+        run: |
+          npm run build
+          zip -r application.zip .  # This will generate a zip file of the application in the current directory
+
+      - name: Check if zip file exists
+        run: |
+          if [ ! -f ./application.zip ]; then
+            echo "Zip file not found!"
+            exit 1
+          fi
+
+      # Continue with Packer Build
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -27,23 +36,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
-      # Install Packer
       - name: Install Packer
         uses: hashicorp/setup-packer@v2
         with:
           packer_version: latest
 
-      # Initialize Packer plugins
-      - name: Initialize Packer Plugins
-        run: |
-          packer init ./webapp-ami.pkr.hcl
-
-      # Run Packer validate
-      - name: Validate Packer Template
-        run: |
-          packer validate ./webapp-ami.pkr.hcl
-
-      # Run packer build to create the custom AMI
       - name: Build Custom Packer Image
         run: |
           packer build ./webapp-ami.pkr.hcl
