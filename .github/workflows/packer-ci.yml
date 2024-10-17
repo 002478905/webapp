@@ -33,8 +33,8 @@ jobs:
         run: |
           packer fmt -check ./webapp-ami.pkr.hcl
 
-          - name: Install dependencies
-          run: npm install
+      - name: Install dependencies
+        run: npm install
 
       - name: Run Integration Tests
         run: npm test
@@ -55,6 +55,6 @@ jobs:
         run: ls -la
 
       # Step to run `packer validate` to ensure template is valid
-      - name: Run Packer Validate
-        run: |
-          packer validate ./webapp-ami.pkr.hcl
+      - name: Validate Packer template
+        id: validate
+        run: packer validate -var "artifact_path=application.zip" webapp-ami.pkr.hcl
