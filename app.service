@@ -6,13 +6,17 @@ After=network.target
 User=csye6225
 Group=csye6225
 Environment=PATH=/usr/bin:/usr/local/bin
-Environment="DB_HOST=localhost"
-Environment="DB_USER=postgres"
-Environment="DB_PASSWORD=root"
-Environment="DB_NAME=webapp"
-Environment="DB_PORT=5432"
+
+# Load environment variables from the .env file generated during EC2 instance startup
+EnvironmentFile=/home/ubuntu/.env
+
+# Set the working directory for the web application
 WorkingDirectory=/home/csye6225/webapp
-ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Adjust this path as needed
+
+# Command to start the Node.js application (adjust if your entry point differs)
+ExecStart=/usr/bin/node /home/csye6225/webapp/index.js
+
+# Automatically restart the service if it fails
 Restart=always
 
 [Install]
