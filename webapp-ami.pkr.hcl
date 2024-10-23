@@ -84,14 +84,14 @@ build {
       "sudo -u postgres psql -c \"CREATE DATABASE myappdb WITH OWNER csye6225;\"",
 
       # Step 5: Create directories and unzip the application
-      "sudo mkdir -p /home/csye6225/webapp",
-      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",  # Corrected path
+      "sudo mkdir -p /home/ubuntu/webapp",
+      "sudo unzip /home/ubuntu/application.zip -d /home/ubuntu/webapp",  # Corrected path
 
       # Step 6: Set ownership to the user and group `csye6225`
-      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
+      #"sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
 
       # Step 7: Ensure the app.service file exists before moving
-      "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/; ",
+      "sudo mv /home/ubuntu/webapp/app.service /etc/systemd/system/; ",
 
       # Reload systemd daemon and enable the service
       "sudo systemctl daemon-reload",
