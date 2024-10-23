@@ -25,6 +25,10 @@ jobs:
           npm run build
           zip -r application.zip .
 
+      - name: Check contents of application.zip (file names only)
+        run: |
+          unzip -l application.zip | awk '{print $4}' | tail -n +4 | head -n -2
+
       - name: Verify Artifact
         run: |
           if [ ! -f ./application.zip ]; then
