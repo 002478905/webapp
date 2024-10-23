@@ -1,4 +1,4 @@
-# Cloud Web App testing
+# Cloud Web-App testing
 
 ## Overview
 
