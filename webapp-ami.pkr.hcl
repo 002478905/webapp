@@ -3,8 +3,7 @@ variable "artifact_path" {
   default = "application.zip"
 }
 
-packer
- {
+packer {
   required_plugins {
     amazon = {
       version = ">= 1.2.1"
@@ -15,7 +14,7 @@ packer
 
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default =      "us-east-1"
 }
 
 variable "source_ami" {
