@@ -91,7 +91,7 @@ build {
       "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
 
       # Step 7: Ensure the app.service file exists before moving
-      "if [ -f /home/csye6225/webapp/app.service ]; then sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/; fi",
+      "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/; ",
 
       # Reload systemd daemon and enable the service
       "sudo systemctl daemon-reload",
