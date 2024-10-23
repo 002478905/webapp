@@ -3,7 +3,8 @@ variable "artifact_path" {
   default = "application.zip"
 }
 
-packer {
+packer
+ {
   required_plugins {
     amazon = {
       version = ">= 1.2.1"
