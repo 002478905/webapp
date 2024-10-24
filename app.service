@@ -6,13 +6,13 @@ After=network.target
 User=csye6225
 Group=csye6225
 Environment=PATH=/usr/bin:/usr/local/bin
-Environment="DB_HOST=localhost"
+Environment="DB_HOST=csye6225.cb2wiamy6477.us-east-1.rds.amazonaws.com"
 Environment="DB_USER=postgres"
-Environment="DB_PASSWORD=root"
+Environment="DB_PASSWORD=root12345"
 Environment="DB_NAME=webapp"
 Environment="DB_PORT=5432"
-WorkingDirectory=/home/ubuntu/webapp
-ExecStart=/usr/bin/node /home/ubuntu/webapp/index.js  # Adjust this path as needed
+WorkingDirectory=/home/csye6225/webapp
+ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Adjust this path as needed
 Restart=always
 
 [Install]
