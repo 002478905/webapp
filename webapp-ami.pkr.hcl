@@ -80,8 +80,8 @@ build {
       "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",  # Ignore error if the user already exists
 
       # Step 4: Set up PostgreSQL (create role and database)
-      "sudo -u postgres psql -c \"CREATE ROLE postgres WITH LOGIN PASSWORD 'root';\"",
-      "sudo -u postgres psql -c \"CREATE DATABASE webapp WITH OWNER postgres;\"",
+      "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'root';\"",
+      "sudo -u postgres psql -c \"CREATE DATABASE webapp WITH OWNER csye6225;\"",
 
       # Step 5: Create directories and unzip the application
       "sudo mkdir -p /home/ubuntu/webapp",
