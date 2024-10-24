@@ -1,10 +1,10 @@
 name: Build and Deploy Application
 
 on:
-  pull_request:
+  push:  # Trigger on push to branches, not on pull_request
     branches:
       - main
-      - dev
+      - dev  # Only build custom image when a pull request is merged into main or dev
 
 jobs:
   build-and-deploy:

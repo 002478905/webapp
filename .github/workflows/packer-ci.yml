@@ -23,13 +23,22 @@ jobs:
       - name: Initialize Packer Plugins
         run: |
           packer init ./webapp-ami.pkr.hcl
+
       - name: Create Packer variables file
         run: |
           echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
-      # Step to run `packer fmt` to ensure formatting
-      - name: Run Packer Fmt
+
+      # Step to run `packer fmt` to ensure formatting and highlight changes
+      - name: Run Packer Fmt Check
         run: |
-          packer fmt ./webapp-ami.pkr.hcl
+          packer fmt -check ./webapp-ami.pkr.hcl
+        continue-on-error: true
+      - name: Check for Packer Format Errors
+        if: failure()  # Fail the workflow if formatting is not correct
+        run: |
+          echo "Packer formatting issues detected. Run 'packer fmt' to fix."
+          exit 1
+
       - name: Install dependencies
         run: npm install
 
@@ -40,12 +49,14 @@ jobs:
         run: |
           npm run build
           zip -r application.zip .
+
       - name: Verify Artifact
         run: |
           if [ ! -f ./application.zip ]; then
             echo "Error: application.zip not found!"
             exit 1
           fi
+
       - name: List Directory Contents
         run: ls -la
 
