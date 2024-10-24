@@ -12,7 +12,7 @@ Environment="DB_PASSWORD=root"
 Environment="DB_NAME=webapp"
 Environment="DB_PORT=5432"
 WorkingDirectory=/home/csye6225/webapp
-ExecStart=/usr/bin/node /home/csye6225/webapp/index.js  # Adjust this path as needed
+ExecStart=/usr/bin/node /home/ubuntu/webapp/index.js  # Adjust this path as needed
 Restart=always
 
 [Install]
