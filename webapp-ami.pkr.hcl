@@ -46,7 +46,7 @@ source "amazon-ebs" "my-ami" {
     max_attempts  = 50
   }
 
-  instance_type = "t2.small"
+  instance_type = "t2.micro"
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
   subnet_id     = var.subnet_id
@@ -70,28 +70,34 @@ build {
     destination = "/home/ubuntu/application.zip"
   }
 
-  # Step 2: Install necessary software (PostgreSQL) and configure the instance
+  # Step 2: Install necessary software (Node.js) and configure the instance
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
-      "sudo apt-get install -y postgresql postgresql-contrib unzip",
+      
+      # Commented out PostgreSQL installation
+      # "sudo apt-get install -y postgresql postgresql-contrib unzip",
+
+      # Install Node.js
+      "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -",
+      "sudo apt-get install -y nodejs unzip",
 
       # Step 3: Create user `csye6225` with no login
       "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",  # Ignore error if the user already exists
 
-      # Step 4: Set up PostgreSQL (create role and database)
-      "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'root';\"",
-      "sudo -u postgres psql -c \"CREATE DATABASE webapp WITH OWNER csye6225;\"",
+      # Commented out PostgreSQL role and database creation
+      # "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'password';\"",
+      # "sudo -u postgres psql -c \"CREATE DATABASE myappdb WITH OWNER csye6225;\"",
 
-      # Step 5: Create directories and unzip the application
-      "sudo mkdir -p /home/ubuntu/webapp",
-      "sudo unzip /home/ubuntu/application.zip -d /home/ubuntu/webapp",  # Corrected path
+      # Step 4: Create directories and unzip the application
+      "sudo mkdir -p /home/csye6225/webapp",
+      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",  # Corrected path
 
-      # Step 6: Set ownership to the user and group `csye6225`
-      #"sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
+      # Step 5: Set ownership to the user and group `csye6225`
+      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
 
-      # Step 7: Ensure the app.service file exists before moving
-      "sudo mv /home/ubuntu/webapp/app.service /etc/systemd/system/; ",
+      # Step 6: Ensure the app.service file exists before moving
+      "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/; ",
 
       # Reload systemd daemon and enable the service
       "sudo systemctl daemon-reload",
@@ -99,7 +105,7 @@ build {
     ]
   }
 
-  # Step 8: Reload systemd, enable, and start the service
+  # Step 7: Reload systemd, enable, and start the service
   provisioner "shell" {
     inline = [
       "sudo systemctl daemon-reload",
