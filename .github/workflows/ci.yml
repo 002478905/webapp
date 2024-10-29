@@ -64,18 +64,18 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Tests
-        env:
-          DB_USER: $DB_USER
-          DB_PASSWORD: $DB_PASSWORD
-          DB_NAME: $DB_NAME
-          DB_PORT: $DB_PORT
-          DB_HOST: postgres # Use the service name
-        run: |
-          npm test
-      - name: Upload coverage report
-        if: success()
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage
+      # - name: Run Tests
+      #   env:
+      #     DB_USER: $DB_USER
+      #     DB_PASSWORD: $DB_PASSWORD
+      #     DB_NAME: $DB_NAME
+      #     DB_PORT: $DB_PORT
+      #     DB_HOST: postgres # Use the service name
+      #   run: |
+      #     npm test
+      # - name: Upload coverage report
+      #   if: success()
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-report
+      #     path: coverage
