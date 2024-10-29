@@ -29,7 +29,8 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default = "subnet-0eb60cf3e6d3319d4"
+ # default = "subnet-0eb60cf3e6d3319d4"
+  default ="subnet-003d768407efe7781"
 }
 
 source "amazon-ebs" "my-ami" {
@@ -115,19 +116,19 @@ build {
   }
 }
 # In your Packer template `webapp-ami.pkr.hcl`
-# build {
-#   sources = [
-#     "source.amazon-ebs.my-ami",
-#   ]
+build {
+  sources = [
+    "source.amazon-ebs.my-ami",
+  ]
 
-#   provisioner "file" {
-#     source      = "cloudwatch-config.json"
-#     destination = "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
-#   }
+  provisioner "file" {
+    source      = "cloudwatch-config.json"
+    destination = "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  }
 
-#   provisioner "shell" {
-#     inline = [
-#       "/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
-#     ]
-#   }
-# }
+  provisioner "shell" {
+    inline = [
+      "/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+    ]
+  }
+}
