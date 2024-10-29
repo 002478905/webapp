@@ -29,7 +29,7 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default = "subnet-0eb60cf3e6d3319d4"
+  default = "subnet-04627e74a7ab23048"
 }
 
 source "amazon-ebs" "my-ami" {
