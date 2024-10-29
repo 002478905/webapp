@@ -136,7 +136,7 @@ build {
       "aws logs create-log-group --log-group-name '/my-app/logs' || true",
       "echo  cloudwatch group create",
       # Start the CloudWatch Agent
-      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s",
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-config.json -s",
       "sleep 5",
       "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status",
       "echo  cloudwatch group status",
