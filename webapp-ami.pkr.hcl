@@ -19,12 +19,12 @@ variable "aws_region" {
 
 variable "iam_instance_profile" {
   type    = string
-  default = "ec2_instance_profile"  # Name of your IAM instance profile
+  default = "ec2_instance_profile" # Name of your IAM instance profile
 }
 
 variable "source_ami" {
   type    = string
-  default = "ami-0866a3c8686eaeeba"  # Ubuntu 24.04 LTS
+  default = "ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
 }
 
 variable "ssh_username" {
@@ -33,10 +33,10 @@ variable "ssh_username" {
 }
 
 variable "subnet_id" {
-  type    = string 
+  type    = string
   default = "subnet-04627e74a7ab23048"
- # default = "subnet-0eb60cf3e6d3319d4"
-#  default ="subnet-003d768407efe7781"
+  # default = "subnet-0eb60cf3e6d3319d4"
+  #  default ="subnet-003d768407efe7781"
 }
 
 source "amazon-ebs" "my-ami" {
@@ -84,7 +84,7 @@ build {
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
-      
+
       # Commented out PostgreSQL installation
       # "sudo apt-get install -y postgresql postgresql-contrib unzip",
 
@@ -97,7 +97,7 @@ build {
       "sudo dpkg -i amazon-cloudwatch-agent.deb",
 
       # Step 3: Create user `csye6225` with no login
-      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",  # Ignore error if the user already exists
+      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true", # Ignore error if the user already exists
 
       # Commented out PostgreSQL role and database creation
       # "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'password';\"",
@@ -105,7 +105,7 @@ build {
 
       # Step 4: Create directories and unzip the application
       "sudo mkdir -p /home/csye6225/webapp",
-      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",  # Corrected path
+      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp", # Corrected path
 
       # Step 5: Set ownership to the user and group `csye6225`
       "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
@@ -121,7 +121,7 @@ build {
 
   # Step 3: Upload CloudWatch configuration file to a temporary location
   provisioner "file" {
-    source      = "cloudwatch-config.json"  # Make sure this file exists locally
+    source      = "cloudwatch-config.json" # Make sure this file exists locally
     destination = "/home/ubuntu/amazon-cloudwatch-agent.json"
   }
 
@@ -135,8 +135,8 @@ build {
       "aws logs create-log-group --log-group-name '/my-app/logs' || true",
 
       # Start the CloudWatch Agent
-      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
-      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status"
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status",
 
     ]
   }
