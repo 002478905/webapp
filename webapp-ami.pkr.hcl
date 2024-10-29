@@ -17,10 +17,6 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "iam_instance_profile" {
-  type    = string
-  default = "ec2_instance_profile" # Name of your IAM instance profile
-}
 
 variable "source_ami" {
   type    = string
@@ -58,8 +54,6 @@ source "amazon-ebs" "my-ami" {
   ssh_username  = var.ssh_username
   subnet_id     = var.subnet_id
 
-  # Attach the IAM instance profile
-  iam_instance_profile = var.iam_instance_profile
 
   launch_block_device_mappings {
     delete_on_termination = true
@@ -128,6 +122,8 @@ build {
   # Step 4: Move CloudWatch configuration to the correct location with sudo and create the log group
   provisioner "shell" {
     inline = [
+      "aws iam attach-user-policy --user-name cyse6225-packer-user --policy-arn arn:aws:iam::<account-id>:policy/ec2_instance_profile || true"
+
       # Move the config file to the correct location
       "sudo mv /home/ubuntu/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
       "sleep 5",
