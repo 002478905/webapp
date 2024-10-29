@@ -122,17 +122,24 @@ build {
   # Step 4: Move CloudWatch configuration to the correct location with sudo and create the log group
   provisioner "shell" {
     inline = [
-      "aws iam attach-user-policy --user-name cyse6225-packer-user --policy-arn arn:aws:iam::<account-id>:policy/ec2_instance_profile || true",
 
+      "echo iam watch start",
+      "aws iam attach-user-policy --user-name cyse6225-packer-user --policy-arn arn:aws:iam::<account-id>:policy/ec2_instance_profile || true",
+      "echo iam watch end",
+      "sleep 5",
+
+      "echo starting cloudwatch",
       # Move the config file to the correct location
       "sudo mv /home/ubuntu/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
       "sleep 5",
       # Create the CloudWatch log group if it doesn't exist
       "aws logs create-log-group --log-group-name '/my-app/logs' || true",
-
+      "echo  cloudwatch group create",
       # Start the CloudWatch Agent
       "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+      "sleep 5",
       "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status",
+      "echo  cloudwatch group status",
 
     ]
   }
