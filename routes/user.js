@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const router = express.Router();
 const auth = require("../middleware/auth");
-const { sendEmail } = require("../config/email");
+// const { sendEmail } = require("../config/email");
 const StatsD = require("hot-shots");
 const statsd = new StatsD({ host: "127.0.0.1", port: 8125 });
 
@@ -150,12 +150,12 @@ router.post("/", async (req, res) => {
     });
 
     // Send welcome email to the new user
-    await sendEmail(
-      newUser.email,
-      "Welcome to Our Service!",
-      "Thank you for registering.",
-      "<h1>Thank you for registering!</h1>"
-    );
+    // await sendEmail(
+    //   newUser.email,
+    //   "Welcome to Our Service!",
+    //   "Thank you for registering.",
+    //   "<h1>Thank you for registering!</h1>"
+    // );
 
     // Return the response with the user details
     res.status(201).json({
