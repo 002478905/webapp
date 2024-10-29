@@ -10,4 +10,9 @@ const sequelize = new Sequelize(
     dialect: "postgres",
   }
 );
+sequelize.addHook("afterQuery", (options, query) => {
+  const duration = query.executionTime; // This assumes executionTime is available
+  statsd.timing("database.query.duration", duration);
+});
+
 module.exports = sequelize;

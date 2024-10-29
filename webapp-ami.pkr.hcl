@@ -114,3 +114,20 @@ build {
     ]
   }
 }
+# In your Packer template `webapp-ami.pkr.hcl`
+build {
+  sources = [
+    "source.amazon-ebs.my-ami",
+  ]
+
+  provisioner "file" {
+    source      = "cloudwatch-config.json"
+    destination = "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+    ]
+  }
+}
