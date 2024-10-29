@@ -1,4 +1,4 @@
-# Cloud Web App therefore
+# Cloud Web App
 
 ## Overview
 
