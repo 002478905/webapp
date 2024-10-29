@@ -111,15 +111,16 @@ build {
     ]
   }
 
-  # Step 3: Upload CloudWatch configuration file
+  # Step 3: Upload CloudWatch configuration file to a temporary location
   provisioner "file" {
     source      = "cloudwatch-config.json"  # Make sure this file exists locally
-    destination = "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+    destination = "/home/ubuntu/amazon-cloudwatch-agent.json"
   }
 
-  # Step 4: Start the CloudWatch Agent using the configuration
+  # Step 4: Move CloudWatch configuration to the correct location with sudo
   provisioner "shell" {
     inline = [
+      "sudo mv /home/ubuntu/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
       "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
     ]
   }
