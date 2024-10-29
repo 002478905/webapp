@@ -5,7 +5,8 @@ const User = require("./models/User");
 const userRoutes = require("./routes/user"); // Import the user routes
 
 const dotenv = require("dotenv");
-
+//const cloudWatchLogger = require("./config/cloudWatchlogger");
+const loggerMW = require("./config/loggerMiddelware");
 // Load environment variables from .env file
 dotenv.config();
 
@@ -24,7 +25,9 @@ const PORT = 8080;
 // Parse JSON request bodies (even though we don't expect them for GET)
 app.use(express.json());
 app.use("/v1/user", userRoutes);
-
+// Apply the CloudWatch logger middleware
+// app.use(cloudWatchLogger);
+app.use(loggerMW.loggerMiddleWare);
 //setting up the postgres connection
 
 const pool = new Pool({
