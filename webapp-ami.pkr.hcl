@@ -84,6 +84,9 @@ build {
       "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -",
       "sudo apt-get install -y nodejs unzip",
 
+      # Install Amazon CloudWatch Agent
+      "sudo apt-get install -y amazon-cloudwatch-agent",
+
       # Step 3: Create user `csye6225` with no login
       "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",  # Ignore error if the user already exists
 
@@ -106,6 +109,20 @@ build {
       "sudo systemctl enable app"
     ]
   }
+  
+  # Step 3: Upload CloudWatch configuration file
+  provisioner "file" {
+    source      = "cloudwatch-config.json"  # Make sure this file exists locally
+    destination = "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  }
+
+  # Step 4: Start the CloudWatch Agent using the configuration
+  provisioner "shell" {
+    inline = [
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+    ]
+  }
+
 
   # Step 7: Reload systemd, enable, and start the service
   provisioner "shell" {
