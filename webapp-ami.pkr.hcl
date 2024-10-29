@@ -17,6 +17,11 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
+variable "iam_instance_profile" {
+  type    = string
+  default = "ec2_instance_profile"  # Name of your IAM instance profile
+}
+
 variable "source_ami" {
   type    = string
   default = "ami-0866a3c8686eaeeba"  # Ubuntu 24.04 LTS
@@ -52,6 +57,9 @@ source "amazon-ebs" "my-ami" {
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
   subnet_id     = var.subnet_id
+
+  # Attach the IAM instance profile
+  iam_instance_profile = var.iam_instance_profile
 
   launch_block_device_mappings {
     delete_on_termination = true
@@ -122,12 +130,14 @@ build {
     inline = [
       # Move the config file to the correct location
       "sudo mv /home/ubuntu/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
-
+      "sleep 5",
       # Create the CloudWatch log group if it doesn't exist
       "aws logs create-log-group --log-group-name '/my-app/logs' || true",
 
       # Start the CloudWatch Agent
       "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status"
+
     ]
   }
 
