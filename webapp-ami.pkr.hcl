@@ -14,7 +14,7 @@ packer {
 
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default = "us-east-2"
 }
 
 variable "source_ami" {
@@ -29,7 +29,7 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default = "subnet-04627e74a7ab23048"
+  #default = "subnet-04627e74a7ab23048"
 }
 
 source "amazon-ebs" "my-ami" {
@@ -38,7 +38,7 @@ source "amazon-ebs" "my-ami" {
   ami_description = "Custom AMI for CSYE 6225 Web Application"
 
   ami_regions = [
-    "us-east-1",
+    "us-east-2",
   ]
 
   aws_polling {
