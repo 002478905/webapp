@@ -19,7 +19,7 @@ variable "aws_region" {
 
 variable "source_ami" {
   type    = string
-  default = "ami-0866a3c8686eaeeba"  # Ubuntu 24.04 LTS
+  default = "ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
 }
 
 variable "ssh_username" {
@@ -29,8 +29,7 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default="subnet-0d89dbd41655b54db"
-  #default = "subnet-04627e74a7ab23048"
+  default = "subnet-0d89dbd41655b54db" #default = "subnet-04627e74a7ab23048"
 }
 
 source "amazon-ebs" "my-ami" {
@@ -75,7 +74,7 @@ build {
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
-      
+
       # Commented out PostgreSQL installation
       # "sudo apt-get install -y postgresql postgresql-contrib unzip",
 
@@ -84,7 +83,7 @@ build {
       "sudo apt-get install -y nodejs unzip",
 
       # Step 3: Create user `csye6225` with no login
-      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",  # Ignore error if the user already exists
+      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true", # Ignore error if the user already exists
 
       # Commented out PostgreSQL role and database creation
       # "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'password';\"",
@@ -92,7 +91,7 @@ build {
 
       # Step 4: Create directories and unzip the application
       "sudo mkdir -p /home/csye6225/webapp",
-      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",  # Corrected path
+      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp", # Corrected path
 
       # Step 5: Set ownership to the user and group `csye6225`
       "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
