@@ -14,7 +14,7 @@ packer {
 
 variable "aws_region" {
   type    = string
-  default = "us-east-2"
+  default = "us-east-1"
 }
 
 variable "source_ami" {
@@ -38,7 +38,7 @@ source "amazon-ebs" "my-ami" {
   ami_description = "Custom AMI for CSYE 6225 Web Application"
 
   ami_regions = [
-    "us-east-2",
+    "us-east-1",
   ]
 
   aws_polling {
