@@ -19,7 +19,7 @@ variable "aws_region" {
 
 variable "source_ami" {
   type    = string
-  default = "ami-0ea3c35c5c3284d82" #"ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
+  default = "ami-0866a3c8686eaeeba" #"ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
 }
 
 variable "ssh_username" {
@@ -29,7 +29,7 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default = "subnet-0d89dbd41655b54db" #default = "subnet-04627e74a7ab23048"
+  default = "subnet-04627e74a7ab23048" #default = "subnet-04627e74a7ab23048"
 }
 
 source "amazon-ebs" "my-ami" {
