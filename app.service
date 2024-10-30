@@ -6,7 +6,7 @@ After=network.target
 User=csye6225
 Group=csye6225
 Environment=PATH=/usr/bin:/usr/local/bin
-Environment="DB_HOST=csye6225.cb2wiamy6477.us-east-1.rds.amazonaws.com"
+Environment="DB_HOST=csye6225.cb2wiamy6477.us-east-2.rds.amazonaws.com"
 Environment="DB_USER=postgres"
 Environment="DB_PASSWORD=root12345"
 Environment="DB_NAME=webapp"
