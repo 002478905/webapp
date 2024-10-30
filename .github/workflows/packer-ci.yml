@@ -1,66 +1,66 @@
-# name: Packer CI Workflow
+name: Packer CI Workflow
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
-#       - dev
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
 
-# jobs:
-#   packer-check:
-#     runs-on: ubuntu-latest
+jobs:
+  packer-check:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-#       - name: Install Packer
-#         uses: hashicorp/setup-packer@v2
-#         with:
-#           packer_version: latest
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          packer_version: latest
 
-#       # Step to initialize Packer plugins
-#       - name: Initialize Packer Plugins
-#         run: |
-#           packer init ./webapp-ami.pkr.hcl
+      # Step to initialize Packer plugins
+      - name: Initialize Packer Plugins
+        run: |
+          packer init ./webapp-ami.pkr.hcl
 
-#       - name: Create Packer variables file
-#         run: |
-#           echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
+      - name: Create Packer variables file
+        run: |
+          echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
 
-#       # Step to run `packer fmt` to ensure formatting and highlight changes
-#       - name: Run Packer Fmt Check
-#         run: |
-#           packer fmt -check ./webapp-ami.pkr.hcl
-#         continue-on-error: true
-#       - name: Check for Packer Format Errors
-#         if: failure()  # Fail the workflow if formatting is not correct
-#         run: |
-#           echo "Packer formatting issues detected. Run 'packer fmt' to fix."
-#           exit 1
+      # Step to run `packer fmt` to ensure formatting and highlight changes
+      - name: Run Packer Fmt Check
+        run: |
+          packer fmt -check ./webapp-ami.pkr.hcl
+        continue-on-error: true
+      - name: Check for Packer Format Errors
+        if: failure() # Fail the workflow if formatting is not correct
+        run: |
+          echo "Packer formatting issues detected. Run 'packer fmt' to fix."
+          exit 1
 
-#       - name: Install dependencies
-#         run: npm install
+      - name: Install dependencies
+        run: npm install
 
-#       # - name: Run Integration Tests
-#       #   run: npm test
+      # - name: Run Integration Tests
+      #   run: npm test
 
-#       - name: Build Application Artifact
-#         run: |
-#           npm run build
-#           zip -r application.zip .
+      - name: Build Application Artifact
+        run: |
+          npm run build
+          zip -r application.zip .
 
-#       - name: Verify Artifact
-#         run: |
-#           if [ ! -f ./application.zip ]; then
-#             echo "Error: application.zip not found!"
-#             exit 1
-#           fi
+      - name: Verify Artifact
+        run: |
+          if [ ! -f ./application.zip ]; then
+            echo "Error: application.zip not found!"
+            exit 1
+          fi
 
-#       - name: List Directory Contents
-#         run: ls -la
+      - name: List Directory Contents
+        run: ls -la
 
-#       # Step to run `packer validate` to ensure template is valid
-#       - name: Validate Packer template
-#         id: validate
-#         run: packer validate -var "artifact_path=application.zip" webapp-ami.pkr.hcl
+      # Step to run `packer validate` to ensure template is valid
+      - name: Validate Packer template
+        id: validate
+        run: packer validate -var "artifact_path=application.zip" webapp-ami.pkr.hcl
