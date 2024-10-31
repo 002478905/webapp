@@ -1,4 +1,4 @@
-# Cloud Web App testing for demo user switch
+# Cloud Web App
 
 ## Overview
 
