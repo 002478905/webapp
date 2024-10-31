@@ -48,11 +48,6 @@ jobs:
           psql -h postgres -U postgres -c "CREATE DATABASE \"$DB_NAME\";"
           psql -h postgres -U postgres -c "CREATE ROLE \"$DB_USER\" WITH LOGIN PASSWORD '$DB_PASSWORD';"
           psql -h postgres -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
-      # - name: Create Database and User
-      #   run: |
-      #     psql -h postgres -U "$DB_USER" -c "CREATE DATABASE $DB_NAME;"
-      #     psql -h postgres -U "$DB_USER" -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASSWORD';"
-      #     psql -h postgres -U "$DB_USER" -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 
       - uses: actions/checkout@v3
 
@@ -61,21 +56,20 @@ jobs:
         with:
           node-version: "latest"
 
-      - name: Install dependencies
-        run: npm install
-
-      # - name: Run Tests
-      #   env:
-      #     DB_USER: $DB_USER
-      #     DB_PASSWORD: $DB_PASSWORD
-      #     DB_NAME: $DB_NAME
-      #     DB_PORT: $DB_PORT
-      #     DB_HOST: postgres # Use the service name
-      #   run: |
-      #     npm test
-      # - name: Upload coverage report
-      #   if: success()
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: coverage-report
-      #     path: coverage
+      # - name: Install dependencies
+      #   run: npm install
+# - name: Run Tests
+#   env:
+#     DB_USER: $DB_USER
+#     DB_PASSWORD: $DB_PASSWORD
+#     DB_NAME: $DB_NAME
+#     DB_PORT: $DB_PORT
+#     DB_HOST: postgres # Use the service name
+#   run: |
+#     npm test
+# - name: Upload coverage report
+#   if: success()
+#   uses: actions/upload-artifact@v3
+#   with:
+#     name: coverage-report
+#     path: coverage

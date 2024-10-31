@@ -34,7 +34,7 @@ jobs:
           packer fmt -check ./webapp-ami.pkr.hcl
         continue-on-error: true
       - name: Check for Packer Format Errors
-        if: failure()  # Fail the workflow if formatting is not correct
+        if: failure() # Fail the workflow if formatting is not correct
         run: |
           echo "Packer formatting issues detected. Run 'packer fmt' to fix."
           exit 1
