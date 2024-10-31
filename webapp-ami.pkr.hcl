@@ -1,6 +1,27 @@
+# Packer configuration for building the AMI
 variable "artifact_path" {
   type    = string
   default = "application.zip"
+}
+
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
+
+variable "source_ami" {
+  type    = string
+  default = "ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
+}
+
+variable "ssh_username" {
+  type    = string
+  default = "ubuntu"
+}
+
+variable "subnet_id" {
+  type    = string
+  default = "subnet-04627e74a7ab23048"
 }
 
 packer {
@@ -12,34 +33,12 @@ packer {
   }
 }
 
-variable "aws_region" {
-  type    = string
-  default = "us-east-1"
-}
-
-variable "source_ami" {
-  type    = string
-  default = "ami-0866a3c8686eaeeba" #"ami-0866a3c8686eaeeba" # Ubuntu 24.04 LTS
-}
-
-variable "ssh_username" {
-  type    = string
-  default = "ubuntu"
-}
-
-variable "subnet_id" {
-  type    = string
-  default = "subnet-04627e74a7ab23048" #default = "subnet-04627e74a7ab23048"
-}
-
 source "amazon-ebs" "my-ami" {
   region          = var.aws_region
   ami_name        = "csye6225-coursework-${formatdate("YYYY_MM_DD-hh-mm-ss", timestamp())}"
   ami_description = "Custom AMI for CSYE 6225 Web Application"
 
-  ami_regions = [
-    "us-east-1",
-  ]
+  ami_regions = ["us-east-1"]
 
   aws_polling {
     delay_seconds = 120
@@ -60,75 +59,55 @@ source "amazon-ebs" "my-ami" {
 }
 
 build {
-  sources = [
-    "source.amazon-ebs.my-ami",
-  ]
+  sources = ["source.amazon-ebs.my-ami"]
 
-  # Step 1: Copy the application zip file to the instance
+  # Copy the application zip file to the instance
   provisioner "file" {
     source      = var.artifact_path
     destination = "/home/ubuntu/application.zip"
   }
 
-  # Step 2: Install necessary software (Node.js) and configure the instance
+  # Copy the CloudWatch configuration file to the instance
+  provisioner "file" {
+    source      = "cloudwatch-config.json"
+    destination = "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+  }
+
+  # Install necessary software and configure the instance
   provisioner "shell" {
     inline = [
       "sudo apt-get update",
-
-      # Commented out PostgreSQL installation
-      # "sudo apt-get install -y postgresql postgresql-contrib unzip",
-
-      # Install Node.js
+      "sudo apt-get install -y nodejs unzip amazon-cloudwatch-agent",
       "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -",
-      "sudo apt-get install -y nodejs unzip",
 
-      # Step 3: Create user `csye6225` with no login
-      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true", # Ignore error if the user already exists
+      # Create a non-login user for the application
+      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",
 
-      # Commented out PostgreSQL role and database creation
-      # "sudo -u postgres psql -c \"CREATE ROLE csye6225 WITH LOGIN PASSWORD 'password';\"",
-      # "sudo -u postgres psql -c \"CREATE DATABASE myappdb WITH OWNER csye6225;\"",
-
-      # Step 4: Create directories and unzip the application
+      # Create application directory, unzip, and set ownership
       "sudo mkdir -p /home/csye6225/webapp",
-      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp", # Corrected path
-
-      # Step 5: Set ownership to the user and group `csye6225`
+      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",
       "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
 
-      # Step 6: Ensure the app.service file exists before moving
-      "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/; ",
-
-      # Reload systemd daemon and enable the service
+      # Move the app.service file and enable it
+      "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/",
       "sudo systemctl daemon-reload",
       "sudo systemctl enable app"
     ]
   }
 
+  # Configure and start CloudWatch Agent
   provisioner "shell" {
     inline = [
+      "echo Starting CloudWatch configuration",
 
-      "echo iam watch start",
-      "aws iam attach-user-policy --user-name cyse6225-packer-user --policy-arn arn:aws:iam::<account-id>:policy/ec2_instance_profile || true",
-      "echo iam watch end",
-      "sleep 5",
-
-      "echo starting cloudwatch",
-      # Move the config file to the correct location
-      "sudo mv /home/ubuntu/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
-      "sleep 5",
-      # Create the CloudWatch log group if it doesn't exist
-      "aws logs create-log-group --log-group-name '/my-app/logs' || true",
-      "echo  cloudwatch group create",
       # Start the CloudWatch Agent
       "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s",
       "sleep 5",
-      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status",
-      "echo  cloudwatch group status",
-
+      "sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status"
     ]
   }
-  # Step 7: Reload systemd, enable, and start the service
+
+  # Ensure the application service is running
   provisioner "shell" {
     inline = [
       "sudo systemctl daemon-reload",
