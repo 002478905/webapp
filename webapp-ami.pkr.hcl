@@ -31,10 +31,6 @@ variable "subnet_id" {
   type    = string
   default = "subnet-04627e74a7ab23048"
 }
-variable "demo_account_id" {
-  type        = string
-  description = "195275650791"
-}
 
 source "amazon-ebs" "my-ami" {
   region          = var.aws_region
@@ -92,7 +88,7 @@ build {
       # Move service file and enable it
       "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/",
       "sudo systemctl daemon-reload",
-
+      
       "sudo systemctl enable app"
     ]
   }
@@ -117,68 +113,11 @@ build {
   # Ensure application service starts as well
   provisioner "shell" {
     inline = [
-
+      
       "sudo systemctl daemon-reload",
       "sudo systemctl restart app.service",
       "sudo systemctl enable app.service",
       "sudo systemctl start app.service"
-    ]
-  }
-}
-build {
-  sources = ["source.amazon-ebs.my-ami"]
-
-  # Step 1: Copy application zip file and configure instance
-  provisioner "file" {
-    source      = var.artifact_path
-    destination = "/home/ubuntu/application.zip"
-  }
-
-  # Step 2: Install necessary software and configure instance
-  provisioner "shell" {
-    inline = [
-      # Your existing setup commands...
-      # Update package lists
-      "sudo apt-get update",
-
-      # Install Node.js (version 16.x)
-      "curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -",
-      "sudo apt-get install -y nodejs",
-
-      # Install unzip utility
-      "sudo apt-get install -y unzip",
-
-      # Install Amazon CloudWatch Agent
-      "wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
-      "sudo dpkg -i amazon-cloudwatch-agent.deb",
-
-      # Create a new system user `csye6225` with no login access
-      "sudo useradd -M -s /usr/sbin/nologin csye6225 || true",
-
-      # Create directories for the web application
-      "sudo mkdir -p /home/csye6225/webapp",
-
-      # Unzip the application artifact (application.zip) into the webapp directory
-      "sudo unzip /home/ubuntu/application.zip -d /home/csye6225/webapp",
-
-      # Set ownership of the webapp directory to `csye6225` user
-      "sudo chown -R csye6225:csye6225 /home/csye6225/webapp",
-
-      # Move the service file into systemd directory and reload systemd daemon
-      "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/",
-      "sudo systemctl daemon-reload",
-
-      # Enable and start the `app` service (your web application)
-      "sudo systemctl enable app.service",
-      "sudo systemctl start app.service"
-    ]
-  }
-
-  # Step 3: Post-process to share AMI with demo account
-  post-processors {
-    type = "shell-local"
-    inline = [
-      "aws ec2 modify-image-attribute --image-id {{ .ArtifactId }} --launch-permission 'Add=[{UserId=${var.demo_account_id}}]'"
     ]
   }
 }
