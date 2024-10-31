@@ -1,5 +1,5 @@
-import { createLogger, format, transports } from "winston";
-import moment from "moment-timezone";
+const { createLogger, format, transports } = require("winston");
+const moment = require("moment-timezone");
 
 // Function to format timestamps in EST timezone
 const estTimestampFormat = () => {
@@ -11,7 +11,7 @@ const logger = createLogger({
   level: "info",
   format: format.combine(
     format.timestamp({
-      format: estTimestampFormat, // Use the custom timestamp format
+      format: estTimestampFormat,
     }),
     format.printf((info) =>
       JSON.stringify({
@@ -22,14 +22,11 @@ const logger = createLogger({
     )
   ),
   transports: [
-    // File transport to log messages to a file
     new transports.File({
-      filename: "/home/csye6225/webapp/logs/csye6225application.log", // Corrected file path (use a string)
+      filename: "/home/csye6225/webapp/logs/csye6225application.log",
     }),
-
-    // Console transport to log messages to the console
     new transports.Console(),
   ],
 });
 
-export default logger;
+module.exports = logger;

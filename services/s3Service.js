@@ -2,28 +2,40 @@
 
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3();
-const StatsD = require("node-statsd");
-const client = new StatsD({ host: "localhost", port: 8125 });
-const logger = require("../logger/logger"); // Import the logger
-async function uploadFileToS3(bucketName, key, fileContent) {
-  const startTime = Date.now(); // Start timer
+const logger = require("../logger/logger");
+
+// Upload file to S3
+async function uploadFileToS3(key, fileContent) {
+  const bucketName = process.env.S3_BUCKET_NAME;
+  const params = { Bucket: bucketName, Key: key, Body: fileContent };
 
   try {
-    const params = { Bucket: bucketName, Key: key, Body: fileContent };
-    logger.info(`Uploading file to S3 bucket ${bucketName} with key ${key}`); // Log file upload
-    await s3.upload(params).promise(); // Upload file to S3
+    const data = await s3.upload(params).promise();
 
-    // Send S3 service call time metric in milliseconds to CloudWatch via StatsD
-    client.timing("s3.service_call_time.upload", duration);
-    const duration = Date.now() - startTime; // Calculate duration
+    logger.info(`File uploaded successfully to S3 with key ${key}`);
 
-    // Send S3 service call time metric in milliseconds to CloudWatch via StatsD
-    client.timing("s3.service_call_time.upload", duration);
-
-    logger.info(`File uploaded successfully in ${duration}ms`); // Log success
+    return data; // Return S3 response including URL location of the uploaded file
   } catch (error) {
-    console.error("Error uploading file:", error);
+    logger.error(`Error uploading file to S3: ${error.message}`);
+
+    throw new Error("Error uploading file to S3");
   }
 }
 
-module.exports = { uploadFileToS3 };
+// Delete file from S3
+async function deleteFileFromS3(key) {
+  const bucketName = process.env.S3_BUCKET_NAME;
+  const params = { Bucket: bucketName, Key: key };
+
+  try {
+    await s3.deleteObject(params).promise();
+
+    logger.info(`File deleted successfully from S3 with key ${key}`);
+  } catch (error) {
+    logger.error(`Error deleting file from S3: ${error.message}`);
+
+    throw new Error("Error deleting file from S3");
+  }
+}
+
+module.exports = { uploadFileToS3, deleteFileFromS3 };
