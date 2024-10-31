@@ -88,6 +88,7 @@ build {
       # Move service file and enable it
       "sudo mv /home/csye6225/webapp/app.service /etc/systemd/system/",
       "sudo systemctl daemon-reload",
+      
       "sudo systemctl enable app"
     ]
   }
@@ -112,7 +113,9 @@ build {
   # Ensure application service starts as well
   provisioner "shell" {
     inline = [
+      
       "sudo systemctl daemon-reload",
+      "sudo systemctl restart app.service",
       "sudo systemctl enable app.service",
       "sudo systemctl start app.service"
     ]
