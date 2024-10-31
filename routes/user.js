@@ -1,4 +1,5 @@
 const express = require("express");
+const multer = require("multer"); // For handling multipart form data
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const router = express.Router();
@@ -7,6 +8,7 @@ const { uploadFileToS3 } = require("../services/s3Service");
 const StatsD = require("node-statsd");
 const client = new StatsD({ host: "localhost", port: 8125 });
 const logger = require("../logger/logger");
+const ImageMetadata = require("../models/ImageMetadata"); // Import ImageMetadata model
 
 const startTime = Date.now(); // Start timer for response time
 
@@ -159,13 +161,126 @@ router.all("/self", (req, res) => {
   res.status(405).json({ message: "Method Not Allowed" });
 });
 router.post("/upload", async (req, res) => {
-  const { bucketName, key, fileContent } = req.body; // Assume these are passed in the request body
+  const bucketName = process.env.S3_BUCKET_NAME;
+  const { key, fileContent } = req.body; // Assume these are passed in the request body
 
   try {
     await uploadFileToS3(bucketName, key, fileContent);
     res.status(200).json({ message: "File uploaded successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error uploading file" });
+  }
+});
+
+// Multer configuration for handling file uploads
+// Multer configuration for handling file uploads
+const upload = multer({
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Limit file size to 5MB
+  },
+  fileFilter(req, file, cb) {
+    // Check for valid MIME types
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
+
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      return cb(new Error("Please upload an image file (jpg, jpeg, png)"));
+    }
+
+    // If valid, accept the file
+    cb(null, true);
+  },
+});
+
+// POST /v1/user/self/pic - Upload or update profile picture
+router.post(
+  "/self/pic",
+  auth,
+  upload.single("profilePic"),
+  async (req, res) => {
+    try {
+      const user = req.user;
+      const fileContent = req.file.buffer;
+      const fileName = `${user.id}-${Date.now()}.${
+        req.file.mimetype.split("/")[1]
+      }`;
+      const bucketName = process.env.S3_BUCKET_NAME;
+      // Upload image to S3
+      const s3Response = await uploadFileToS3(
+        bucketName,
+        fileName,
+        fileContent
+      );
+
+      // Store metadata in the database
+      const imageMetadata = await ImageMetadata.create({
+        user_id: user.id,
+        file_name: req.file.originalname,
+        url: s3Response.Location,
+        upload_date: new Date(),
+      });
+
+      // Log success
+      logger.info(`Profile picture uploaded for user ${user.id}`);
+
+      // Respond with metadata
+      res.status(201).json(imageMetadata);
+    } catch (error) {
+      logger.error(`Error uploading profile picture: ${error.message}`);
+      res.status(500).json({ message: "Error uploading profile picture" });
+    }
+  }
+);
+// GET /v1/user/self/pic - Get profile picture metadata
+router.get("/self/pic", auth, async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Retrieve metadata from the database
+    const metadata = await ImageMetadata.findOne({
+      where: { user_id: user.id },
+    });
+
+    if (!metadata) {
+      return res.status(404).json({ message: "Profile picture not found" });
+    }
+
+    // Log success
+    logger.info(`Profile picture retrieved for user ${user.id}`);
+
+    // Respond with metadata
+    res.status(200).json(metadata);
+  } catch (error) {
+    logger.error(`Error retrieving profile picture: ${error.message}`);
+    res.status(500).json({ message: "Error retrieving profile picture" });
+  }
+});
+// DELETE /v1/user/self/pic - Delete profile picture
+router.delete("/self/pic", auth, async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Get metadata from the database
+    const metadata = await ImageMetadata.findOne({
+      where: { user_id: user.id },
+    });
+
+    if (!metadata) {
+      return res.status(404).json({ message: "Profile picture not found" });
+    }
+
+    // Delete image from S3
+    await deleteFileFromS3("your-s3-bucket-name", metadata.file_name);
+
+    // Delete metadata from the database
+    await ImageMetadata.destroy({ where: { user_id: user.id } });
+
+    // Log success
+    logger.info(`Profile picture deleted for user ${user.id}`);
+
+    res.status(204).send(); // No content response on successful deletion
+  } catch (error) {
+    logger.error(`Error deleting profile picture: ${error.message}`);
+    res.status(500).json({ message: "Error deleting profile picture" });
   }
 });
 
