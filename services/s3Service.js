@@ -1,0 +1,25 @@
+// services/s3Service.js
+
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3();
+const StatsD = require("node-statsd");
+const client = new StatsD({ host: "localhost", port: 8125 });
+
+async function uploadFileToS3(bucketName, key, fileContent) {
+  const startTime = Date.now(); // Start timer
+
+  try {
+    const params = { Bucket: bucketName, Key: key, Body: fileContent };
+
+    await s3.upload(params).promise(); // Upload file to S3
+
+    const duration = Date.now() - startTime; // Calculate duration
+
+    // Send S3 service call time metric in milliseconds to CloudWatch via StatsD
+    client.timing("s3.service_call_time.upload", duration);
+  } catch (error) {
+    console.error("Error uploading file:", error);
+  }
+}
+
+module.exports = { uploadFileToS3 };

@@ -3,6 +3,9 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const router = express.Router();
 const auth = require("../middleware/auth");
+const { uploadFileToS3 } = require("../services/s3Service");
+const StatsD = require("node-statsd");
+const client = new StatsD({ host: "localhost", port: 8125 });
 // GET route for getting user information
 router.get("/", async (req, res) => {
   try {
@@ -15,6 +18,8 @@ router.get("/", async (req, res) => {
 // Get current user's account information
 router.get("/self", auth, async (req, res) => {
   try {
+    // Increment API call count metric
+    client.increment("api.calls.self");
     const user = req.user;
 
     res.status(200).json({
@@ -25,6 +30,10 @@ router.get("/self", auth, async (req, res) => {
       account_created: user.account_created,
       account_updated: user.account_updated,
     });
+    const duration = Date.now() - startTime;
+
+    // Send response time metric in milliseconds
+    client.timing("api.response_time.self", duration);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -118,6 +127,16 @@ router.put("/self", auth, async (req, res) => {
 router.all("/self", (req, res) => {
   res.set("Allow", "GET PUT"); // Specify which methods are allowed
   res.status(405).json({ message: "Method Not Allowed" });
+});
+router.post("/upload", async (req, res) => {
+  const { bucketName, key, fileContent } = req.body; // Assume these are passed in the request body
+
+  try {
+    await uploadFileToS3(bucketName, key, fileContent);
+    res.status(200).json({ message: "File uploaded successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error uploading file" });
+  }
 });
 
 module.exports = router;
