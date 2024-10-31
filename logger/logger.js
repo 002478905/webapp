@@ -23,7 +23,7 @@ const logger = createLogger({
   ),
   transports: [
     new transports.File({
-      filename: "/home/csye6225/webapp/logs/csye6225application.log",
+      filename: "/home/csye6225/webapp/logs/csye6225.log",
     }),
     new transports.Console(),
   ],
