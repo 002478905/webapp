@@ -226,7 +226,7 @@ router.post(
       res.status(201).json(imageMetadata);
     } catch (error) {
       logger.error(`Error uploading profile picture: ${error.message}`);
-      res.status(500).json({ message: "Error uploading profile picture" });
+      res.status(400).json({ message: "Error uploading profile picture" });
     }
   }
 );
@@ -282,6 +282,11 @@ router.delete("/self/pic", auth, async (req, res) => {
     logger.error(`Error deleting profile picture: ${error.message}`);
     res.status(500).json({ message: "Error deleting profile picture" });
   }
+});
+// Catch-all route for unsupported methods on /v1/user/self/pic
+router.all("/self/pic", (req, res) => {
+  res.set("Allow", "GET, POST, DELETE"); // Specify which methods are allowed
+  res.status(405).json({ message: "Method Not Allowed" });
 });
 
 module.exports = router;
