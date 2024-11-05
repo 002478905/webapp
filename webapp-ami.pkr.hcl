@@ -31,6 +31,10 @@ variable "subnet_id" {
   type    = string
   default = "subnet-04627e74a7ab23048"
 }
+variable "demo_account_id" {
+  type    = string
+  default = "195275650791"
+}
 
 source "amazon-ebs" "my-ami" {
   region          = var.aws_region
@@ -44,7 +48,7 @@ source "amazon-ebs" "my-ami" {
     max_attempts  = 50
   }
 
-  instance_type = "t2.micro"
+  instance_type = "t2.small"
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
   subnet_id     = var.subnet_id
@@ -54,7 +58,9 @@ source "amazon-ebs" "my-ami" {
     device_name           = "/dev/sda1"
     volume_size           = 25
     volume_type           = "gp2"
+    
   }
+  ami_users = ["${var.demo_account_id}"]
 }
 
 build {
