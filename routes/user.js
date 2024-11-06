@@ -205,11 +205,7 @@ router.post(
       }`;
       const bucketName = process.env.S3_BUCKET_NAME;
       // Upload image to S3
-      const s3Response = await uploadFileToS3(
-        bucketName,
-        fileName,
-        fileContent
-      );
+      const s3Response = await uploadFileToS3(fileName, fileContent);
 
       // Store metadata in the database
       const imageMetadata = await ImageMetadata.create({
