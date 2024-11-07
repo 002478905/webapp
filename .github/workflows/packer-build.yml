@@ -1,10 +1,10 @@
 name: Build and Deploy Application
 
 on:
-  push:
+  push: # Trigger on push to branches, not on pull_request
     branches:
       - main
-      - dev
+      - dev # Only build custom image when a pull request is merged into main or dev
 
 jobs:
   build-and-deploy:
@@ -24,18 +24,15 @@ jobs:
         run: |
           npm run build
           zip -r application.zip .
-
       - name: Check contents of application.zip (file names only)
         run: |
           unzip -l application.zip | awk '{print $4}' | tail -n +4 | head -n -2
-
       - name: Verify Artifact
         run: |
           if [ ! -f ./application.zip ]; then
             echo "Error: application.zip not found!"
             exit 1
           fi
-
       - name: List Directory Contents
         run: ls -la
 
@@ -54,17 +51,9 @@ jobs:
       - name: Create Packer variables file
         run: |
           echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
-
-      - name: Build Custom Packer Image and Extract AMI ID
+      - name: Build Custom Packer Image
         run: |
           packer init .
-          AMI_ID=$(packer build -machine-readable -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
-          if [ -z "$AMI_ID" ]; then
-            echo "Error: AMI_ID is empty!"
-            exit 1
-          fi
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
-
-      - name: Modify AMI Launch Permissions
-        run: |
-          aws ec2 modify-image-attribute --image-id ${{ env.AMI_ID }} --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+          AMI_ID=$(packer build -var-file=variables.pkrvars.hcl -machine-readable ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
+          echo "AMI_ID=$AMI_ID"
+          echo "DEMO_ACCOUNT_ID=$AMI_ID" >> $GITHUB_ENV
