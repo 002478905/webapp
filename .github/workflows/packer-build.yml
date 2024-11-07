@@ -58,17 +58,13 @@ jobs:
       - name: Build Custom Packer Image
         run: |
           packer init .
-          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
-
-      - name: Extract AMI ID
-        run: |
-          AMI_ID=$(packer build -machine-readable ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
+          AMI_ID=$(packer build -machine-readable -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
           if [ -z "$AMI_ID" ]; then
             echo "Error: AMI_ID is empty!"
             exit 1
           fi
-          echo "AMI_ID=$AMI_ID"
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
 
       - name: Modify AMI Launch Permissions
         run: |
-          aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+          aws ec2 modify-image-attribute --image-id ${{ env.AMI_ID }} --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
