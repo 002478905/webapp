@@ -56,7 +56,7 @@ jobs:
           packer init .
           packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
 
-      - name: Share AMI with Demo Account
-        run: |
-          AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[?Name==`'"${{ secrets.AMI_NAME }}"'`].ImageId' --output text)
-          aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+      # - name: Share AMI with Demo Account
+      #   run: |
+      #     AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[?Name==`'"${{ secrets.AMI_NAME }}"'`].ImageId' --output text)
+      #     aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
