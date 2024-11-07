@@ -1,10 +1,10 @@
 name: Build and Deploy Application
 
 on:
-  push: # Trigger on push to branches, not on pull_request
+  push:
     branches:
       - main
-      - dev # Only build custom image when a push is made to main or dev
+      - dev
 
 jobs:
   build-and-deploy:
@@ -55,7 +55,7 @@ jobs:
         run: |
           echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
 
-      - name: Build Custom Packer Image
+      - name: Build Custom Packer Image and Extract AMI ID
         run: |
           packer init .
           AMI_ID=$(packer build -machine-readable -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
