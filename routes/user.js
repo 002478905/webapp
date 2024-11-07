@@ -165,7 +165,7 @@ router.post("/upload", async (req, res) => {
   const { key, fileContent } = req.body; // Assume these are passed in the request body
 
   try {
-    await uploadFileToS3(bucketName, key, fileContent);
+    await uploadFileToS3(key, fileContent);
     res.status(200).json({ message: "File uploaded successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error uploading file" });
