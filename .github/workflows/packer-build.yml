@@ -52,12 +52,17 @@ jobs:
         run: |
           echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
 
-      - name: Build Custom Packer Image
-        run: |
-          packer init .
-          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
+          - name: Build Custom Packer Image
+          run: |
+            packer init .
+            packer build -var-file=variables.pkrvars.hcl -machine-readable ./webapp-ami.pkr.hcl | tee packer_output.log
 
-      - name: Share AMI with Demo Account
-        run: |
-          AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
-          aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+          - name: Share AMI with Demo Account
+            run: |
+              AMI_ID=$(grep 'artifact,0,id' packer_output.log | cut -d ',' -f 6 | cut -d ':' -f 2)
+              if [ -z "$AMI_ID" ]; then
+                echo "Error: Failed to extract AMI ID from Packer output"
+                exit 1
+              fi
+              echo "Extracted AMI ID: $AMI_ID"
+              aws ec2 modify-image-attribute --image-id "$AMI_ID" --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
