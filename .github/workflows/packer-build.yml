@@ -1,10 +1,10 @@
 name: Build and Deploy Application
 
 on:
-  push: # Trigger on push to branches, not on pull_request
+  push:
     branches:
       - main
-      - dev # Only build custom image when a pull request is merged into main or dev
+      - dev
 
 jobs:
   build-and-deploy:
@@ -16,9 +16,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      # - name: Run Integration Tests
-      #   run: npm test
 
       - name: Build Application Artifact
         run: |
@@ -58,13 +55,9 @@ jobs:
       - name: Build Custom Packer Image
         run: |
           packer init .
-          AMI_ID=$(packer build -machine-readable -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
-          if [ -z "$AMI_ID" ]; then
-            echo "Error: AMI_ID is empty!"
-            exit 1
-          fi
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
 
-      - name: Modify AMI Launch Permissions
+      - name: Share AMI with Demo Account
         run: |
-          aws ec2 modify-image-attribute --image-id ${{ env.AMI_ID }} --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+          AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
+          aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
