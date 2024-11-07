@@ -60,7 +60,15 @@ jobs:
           packer init .
           packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
 
+      - name: Extract AMI ID
+        run: |
+          AMI_ID=$(packer build -machine-readable ./webapp-ami.pkr.hcl | grep 'artifact,0,id' | cut -d, -f6)
+          if [ -z "$AMI_ID" ]; then
+            echo "Error: AMI_ID is empty!"
+            exit 1
+          fi
+          echo "AMI_ID=$AMI_ID"
+
       - name: Modify AMI Launch Permissions
         run: |
-          AMI_ID=$(packer output -machine-readable | grep 'artifact,0,id' | cut -d, -f6)
           aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
