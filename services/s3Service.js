@@ -9,6 +9,7 @@ async function uploadFileToS3(key, fileContent) {
   const bucketName = process.env.S3_BUCKET_NAME;
   const params = { Bucket: bucketName, Key: key, Body: fileContent };
 
+  logger.info("Inside upload function key:" + key + "bucketname:" + bucketName);
   try {
     const data = await s3.upload(params).promise();
 
