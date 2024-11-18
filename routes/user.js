@@ -9,11 +9,33 @@ const StatsD = require("node-statsd");
 const client = new StatsD({ host: "localhost", port: 8125 });
 const logger = require("../logger/logger");
 const ImageMetadata = require("../models/ImageMetadata"); // Import ImageMetadata model
-
+const checkEmailVerification = require("../middleware/verificationMiddleware");
 const startTime = Date.now(); // Start timer for response time
 
+// Verification endpoint
+router.get("/verify", async (req, res) => {
+  const { token, expires } = req.query;
+  try {
+    if (Date.now() > parseInt(expires, 10)) {
+      return res.status(400).json({ message: "Verification link has expired" });
+    }
+
+    const user = await User.findOne({ where: { id: token } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.emailVerified = true;
+    await user.save();
+
+    return res.status(200).json({ message: "Email successfully verified" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // GET route for getting user information
-router.get("/", async (req, res) => {
+router.get("/", checkEmailVerification, async (req, res) => {
   try {
     // Logic for fetching users or specific user info
     res.status(200).json({ message: "GET request successful" });
@@ -22,13 +44,16 @@ router.get("/", async (req, res) => {
   }
 });
 // Get current user's account information
-router.get("/self", auth, async (req, res) => {
+router.get("/self", auth, checkEmailVerification, async (req, res) => {
   try {
     // Log the API call
     logger.info("GET /self API called");
     // Increment API call count metric
     client.increment("api.calls.self");
     const user = req.user;
+    if (!user.emailVerified) {
+      return res.status(403).json({ message: "Email not verified" });
+    }
 
     res.status(200).json({
       id: user.id,
@@ -73,7 +98,18 @@ router.post("/", async (req, res) => {
       firstName: first_name,
       lastName: last_name,
     });
+    // Publish message to SNS
+    const message = JSON.stringify({
+      email: newUser.email,
+      userId: newUser.id,
+    });
 
+    await sns
+      .publish({
+        TopicArn: process.env.USER_REGISTRATION_SNS_TOPIC,
+        Message: message,
+      })
+      .promise();
     // Return the response with the user details
     res.status(201).json({
       id: newUser.id,
@@ -103,7 +139,7 @@ router.post("/", async (req, res) => {
 
 // Update current user's account information
 // Update current user's account information
-router.put("/self", auth, async (req, res) => {
+router.put("/self", auth, checkEmailVerification, async (req, res) => {
   try {
     const user = req.user; // Get the authenticated user from the auth middleware
     // Log the API call
@@ -111,6 +147,9 @@ router.put("/self", auth, async (req, res) => {
 
     // Increment API call count metric
     client.increment("api.calls.self");
+    if (!user.emailVerified) {
+      return res.status(403).json({ message: "Email not verified" });
+    }
     const { firstName, lastName, password, email } = req.body;
 
     // Allowed fields for update
@@ -195,6 +234,7 @@ const upload = multer({
 router.post(
   "/self/pic",
   auth,
+  checkEmailVerification,
   upload.single("profilePic"),
   async (req, res) => {
     try {
@@ -227,7 +267,7 @@ router.post(
   }
 );
 // GET /v1/user/self/pic - Get profile picture metadata
-router.get("/self/pic", auth, async (req, res) => {
+router.get("/self/pic", auth, checkEmailVerification, async (req, res) => {
   try {
     const user = req.user;
 
@@ -251,7 +291,7 @@ router.get("/self/pic", auth, async (req, res) => {
   }
 });
 // DELETE /v1/user/self/pic - Delete profile picture
-router.delete("/self/pic", auth, async (req, res) => {
+router.delete("/self/pic", auth, checkEmailVerification, async (req, res) => {
   try {
     const user = req.user;
 
