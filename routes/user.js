@@ -11,25 +11,32 @@ const logger = require("../logger/logger");
 const ImageMetadata = require("../models/ImageMetadata"); // Import ImageMetadata model
 const checkEmailVerification = require("../middleware/verificationMiddleware");
 const startTime = Date.now(); // Start timer for response time
+const AWS = require("aws-sdk");
 
+const sns = new AWS.SNS({ region: "us-east-1" });
 // Verification endpoint
 router.get("/verify", async (req, res) => {
-  const { token, expires } = req.query;
+  const { token } = req.query;
   try {
+    const expires = Date.now() + 2 * 60 * 1000;
     if (Date.now() > parseInt(expires, 10)) {
       return res.status(400).json({ message: "Verification link has expired" });
     }
-
+    logger.info(`Inside Verify`);
     const user = await User.findOne({ where: { id: token } });
     if (!user) {
+      logger.info(`User not found from verify`);
       return res.status(404).json({ message: "User not found" });
     }
-
+    console.log("user verified");
+    logger.info(`User verified successfully`);
     user.emailVerified = true;
     await user.save();
-
+    console.log("32>>");
     return res.status(200).json({ message: "Email successfully verified" });
   } catch (error) {
+    console.log(error);
+    logger.info(`Error `);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -103,10 +110,10 @@ router.post("/", async (req, res) => {
       email: newUser.email,
       userId: newUser.id,
     });
-
-    await sns
+    console.log("before sns");
+    sns
       .publish({
-        TopicArn: process.env.USER_REGISTRATION_SNS_TOPIC,
+        TopicArn: process.env.SNS_TOPIC_ARN,
         Message: message,
       })
       .promise();
