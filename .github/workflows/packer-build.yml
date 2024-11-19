@@ -64,19 +64,20 @@ jobs:
       - name: Build Custom Packer Image
         id: packer
         run: |
-          # Get VPC ID
-          VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=csye6225_vpc" --query 'Vpcs[0].VpcId' --output text)
+          # Get VPC ID using the correct tag filter
+          VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=demo-vpc" --query 'Vpcs[0].VpcId' --output text)
+          echo "Found VPC ID: ${VPC_ID}"
+
+          if [ -z "$VPC_ID" ]; then
+            echo "Error: No VPC found with the specified tag"
+            exit 1
+          fi
 
           packer init .
           packer build \
             -var "vpc_id=${VPC_ID}" \
             -var-file=variables.pkrvars.hcl \
             ./webapp-ami.pkr.hcl
-
-          # Get the AMI ID
-          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
-          echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT
-
       - name: Share AMI with Demo Account
         if: github.ref == 'refs/heads/dev'
         run: |
