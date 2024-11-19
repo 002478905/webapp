@@ -117,9 +117,7 @@ jobs:
       - name: Start Instance Refresh
         id: refresh
         run: |
-          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
-            --query 'AutoScalingGroups[?contains(Tags[?Key==`Name`].Value, `web-app-asg`)].AutoScalingGroupName' \
-            --output text)
+          ASG_NAME="${{ secrets.ASG_NAME }}"
 
           REFRESH_ID=$(aws autoscaling start-instance-refresh \
             --auto-scaling-group-name $ASG_NAME \
@@ -152,10 +150,3 @@ jobs:
             echo "Waiting for instance refresh to complete..."
             sleep 30
           done
-
-      - name: Verify Deployment
-        run: |
-          echo "Deployment Summary:"
-          echo "New AMI ID: ${{ steps.packer.outputs.ami_id }}"
-          echo "Launch Template Version: ${{ steps.launch-template.outputs.launch_template_version }}"
-          echo "Instance Refresh Status: Completed"
