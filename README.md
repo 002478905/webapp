@@ -1,6 +1,4 @@
-# Cloud Web App loader demo
-
-w
+# Cloud Web App loader
 
 ## Overview
 
