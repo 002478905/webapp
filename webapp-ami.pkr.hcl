@@ -27,11 +27,11 @@ variable "ssh_username" {
   default = "ubuntu"
 }
 
-variable "subnet_id" {
-  type    = string
-  default=""
- # default = "subnet-04627e74a7ab23048"
-}
+# variable "subnet_id" {
+#   type    = string
+#   default=""
+#  # default = "subnet-04627e74a7ab23048"
+# }
 variable "demo_account_id" {
   type    = string
   default = "195275650791"
@@ -44,8 +44,7 @@ source "amazon-ebs" "my-ami" {
   region          = var.aws_region
   ami_name        = "csye6225"
   ami_description = "Custom AMI for CSYE 6225 Web Application"
-
-  ami_regions = ["us-east-1"]
+  ami_regions     = ["us-east-1"]
 
   aws_polling {
     delay_seconds = 120
@@ -55,16 +54,25 @@ source "amazon-ebs" "my-ami" {
   instance_type = "t2.small"
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
-  #subnet_id     = var.subnet_id
-  vpc_id = var.vpc_id
+
+  # Use subnet filters instead of vpc_id
+  subnet_filter {
+    filters = {
+      "tag:Name" : "public*"  # Adjust this tag to match your public subnet naming
+      "vpc-id" : "${var.vpc_id}"
+    }
+    most_free = true
+  }
+  
   associate_public_ip_address = true
+
   launch_block_device_mappings {
     delete_on_termination = true
     device_name           = "/dev/sda1"
-    volume_size           = 25
-    volume_type           = "gp2"
-    
+    volume_size          = 25
+    volume_type          = "gp2"
   }
+  
   ami_users = ["${var.demo_account_id}"]
 }
 
