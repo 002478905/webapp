@@ -98,7 +98,7 @@ jobs:
           AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
           aws ec2 modify-image-attribute \
             --image-id $AMI_ID \
-            --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+            --launch-permission "Add=[{UserId=${{ secrets.DEV_ACCOUNT_ID }}}]"
 
       - name: Update Launch Template
         id: launch-template
