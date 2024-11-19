@@ -1,10 +1,10 @@
 name: Build and Deploy Application
 
 on:
-  push: # Trigger on push to branches, not on pull_request
+  push:
     branches:
       - main
-      - dev # Only build custom image when a pull request is merged into main or dev
+      - dev
 
 jobs:
   build-and-deploy:
@@ -17,24 +17,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Run Integration Tests
-      #   run: npm test
-
       - name: Build Application Artifact
         run: |
           npm run build
           zip -r application.zip .
-      - name: Check contents of application.zip (file names only)
+
+      - name: Check contents of application.zip
         run: |
           unzip -l application.zip | awk '{print $4}' | tail -n +4 | head -n -2
+
       - name: Verify Artifact
         run: |
           if [ ! -f ./application.zip ]; then
             echo "Error: application.zip not found!"
             exit 1
           fi
-      - name: List Directory Contents
-        run: ls -la
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -51,12 +48,81 @@ jobs:
       - name: Create Packer variables file
         run: |
           echo 'artifact_path = "application.zip"' > variables.pkrvars.hcl
+
       - name: Build Custom Packer Image
+        id: packer
         run: |
           packer init .
           packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
+          # Get the AMI ID from the Packer build output
+          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225_*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+          echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT
 
-      # - name: Share AMI with Demo Account
-      #   run: |
-      #     AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[?Name==`'"${{ secrets.AMI_NAME }}"'`].ImageId' --output text)
-      #     aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+      - name: Update Launch Template
+        id: launch-template
+        run: |
+          # Get the Launch Template ID
+          LAUNCH_TEMPLATE_ID=$(aws ec2 describe-launch-templates --filters "Name=tag:Name,Values=web-app-lt*" --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
+
+          # Create new version with the new AMI
+          NEW_VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id $LAUNCH_TEMPLATE_ID \
+            --source-version '$Latest' \
+            --launch-template-data "{\"ImageId\":\"${{ steps.packer.outputs.ami_id }}\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+
+          # Update the default version to the new version
+          aws ec2 modify-launch-template \
+            --launch-template-id $LAUNCH_TEMPLATE_ID \
+            --default-version $NEW_VERSION
+
+          echo "launch_template_id=${LAUNCH_TEMPLATE_ID}" >> $GITHUB_OUTPUT
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Start Instance Refresh
+        id: refresh
+        run: |
+          # Get Auto Scaling Group name
+          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
+            --query 'AutoScalingGroups[?contains(Tags[?Key==`Name`].Value, `web-app-asg`)].AutoScalingGroupName' \
+            --output text)
+
+          # Start instance refresh
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name $ASG_NAME \
+            --preferences '{"MinHealthyPercentage": 90, "InstanceWarmup": 300}' \
+            --query 'InstanceRefreshId' \
+            --output text)
+
+          echo "refresh_id=${REFRESH_ID}" >> $GITHUB_OUTPUT
+          echo "asg_name=${ASG_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Wait for Instance Refresh
+        run: |
+          while true; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{ steps.refresh.outputs.asg_name }} \
+              --instance-refresh-ids ${{ steps.refresh.outputs.refresh_id }} \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
+            
+            echo "Instance Refresh Status: $STATUS"
+            
+            if [ "$STATUS" = "Successful" ]; then
+              echo "Instance refresh completed successfully"
+              exit 0
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ]; then
+              echo "Instance refresh failed or was cancelled"
+              exit 1
+            fi
+            
+            echo "Waiting for instance refresh to complete..."
+            sleep 30
+          done
+
+      - name: Verify Deployment
+        run: |
+          echo "New AMI ID: ${{ steps.packer.outputs.ami_id }}"
+          echo "Launch Template Version: ${{ steps.launch-template.outputs.new_version }}"
+          echo "Instance Refresh Status: Completed"

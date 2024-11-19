@@ -111,6 +111,9 @@ router.post("/", async (req, res) => {
       userId: newUser.id,
     });
     console.log("before sns");
+    // Add logging to debug SNS publishing
+    logger.info("SNS_TOPIC_ARN:", process.env.USER_REGISTRATION_SNS_TOPIC);
+    logger.info("Publishing message:", message);
     sns
       .publish({
         TopicArn: process.env.SNS_TOPIC_ARN,
