@@ -98,14 +98,14 @@ jobs:
           AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
           aws ec2 modify-image-attribute \
             --image-id $AMI_ID \
-            --launch-permission "Add=[{UserId=${{ secrets.DEV_ACCOUNT_ID }}}]"
+            --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
 
       - name: Update Launch Template
         id: launch-template
         run: |
           # Get Launch Template ID with correct filter
           LAUNCH_TEMPLATE_ID=$(aws ec2 describe-launch-templates \
-            --filters "Name=tag:Name,Values=web-app-lt" \
+            --filters "Name=launch-template-name,Values=web-app-lt*" \
             --query 'LaunchTemplates[0].LaunchTemplateId' \
             --output text)
 
@@ -115,6 +115,8 @@ jobs:
             echo "Error: Launch template not found"
             exit 1
           fi
+          # Get the AMI ID from previous step
+          AMI_ID="${{ steps.packer.outputs.ami_id }}"
 
           # Create new version with new AMI
           NEW_VERSION=$(aws ec2 create-launch-template-version \
