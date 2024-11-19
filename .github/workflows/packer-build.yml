@@ -64,8 +64,15 @@ jobs:
       - name: Build Custom Packer Image
         id: packer
         run: |
+          # Get VPC ID
+          VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=csye6225_vpc" --query 'Vpcs[0].VpcId' --output text)
+
           packer init .
-          packer build -var-file=variables.pkrvars.hcl ./webapp-ami.pkr.hcl
+          packer build \
+            -var "vpc_id=${VPC_ID}" \
+            -var-file=variables.pkrvars.hcl \
+            ./webapp-ami.pkr.hcl
+
           # Get the AMI ID
           AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
           echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT

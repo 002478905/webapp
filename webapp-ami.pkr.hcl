@@ -36,7 +36,10 @@ variable "demo_account_id" {
   type    = string
   default = "195275650791"
 }
-
+variable "vpc_id" {
+  type    = string
+  default = "" # Leave empty, will be provided during build
+}
 source "amazon-ebs" "my-ami" {
   region          = var.aws_region
   ami_name        = "csye6225"
@@ -52,8 +55,9 @@ source "amazon-ebs" "my-ami" {
   instance_type = "t2.small"
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
-  subnet_id     = var.subnet_id
-
+  #subnet_id     = var.subnet_id
+  vpc_id = var.vpc_id
+  associate_public_ip_address = true
   launch_block_device_mappings {
     delete_on_termination = true
     device_name           = "/dev/sda1"
