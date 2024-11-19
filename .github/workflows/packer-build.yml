@@ -64,7 +64,7 @@ jobs:
       - name: Build Custom Packer Image
         id: packer
         run: |
-          # Get VPC ID using the correct tag filter
+          # Get VPC ID with correct tag filter
           VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=demo-vpc" --query 'Vpcs[0].VpcId' --output text)
           echo "Found VPC ID: ${VPC_ID}"
 
@@ -72,6 +72,10 @@ jobs:
             echo "Error: No VPC found with the specified tag"
             exit 1
           fi
+
+          # Debug output
+          echo "Listing available subnets in VPC:"
+          aws ec2 describe-subnets --filters "Name=vpc-id,Values=${VPC_ID}" --query 'Subnets[*].[SubnetId,Tags[?Key==`Name`].Value]' --output text
 
           packer init .
           packer build \

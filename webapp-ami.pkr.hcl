@@ -56,10 +56,12 @@ source "amazon-ebs" "my-ami" {
   ssh_username  = var.ssh_username
 
   # Use subnet filters instead of vpc_id
+   # Add subnet filter to find public subnets
+  # Add subnet filter to find public subnets
   subnet_filter {
     filters = {
-      "tag:Name" : "public*"  # Adjust this tag to match your public subnet naming
-      "vpc-id" : "${var.vpc_id}"
+      "vpc-id": "${var.vpc_id}"
+      "tag:Name": "Public Subnet*"  # Adjust this to match your subnet naming
     }
     most_free = true
   }
