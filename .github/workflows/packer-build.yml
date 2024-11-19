@@ -64,9 +64,10 @@ jobs:
       - name: Build Custom Packer Image
         id: packer
         run: |
-          # Get VPC ID with correct tag filter
+          # Get VPC ID with proper filter
           VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=demo-vpc" --query 'Vpcs[0].VpcId' --output text)
-          echo "Found VPC ID: ${VPC_ID}"
+
+
 
           if [ -z "$VPC_ID" ]; then
             echo "Error: No VPC found with the specified tag"
@@ -82,6 +83,15 @@ jobs:
             -var "vpc_id=${VPC_ID}" \
             -var-file=variables.pkrvars.hcl \
             ./webapp-ami.pkr.hcl
+
+          # Get and set the AMI ID
+          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+          if [ -z "$AMI_ID" ] || [ "$AMI_ID" = "None" ]; then
+            echo "Error: No AMI found"
+            exit 1
+          fi     
+          echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT
+
       - name: Share AMI with Demo Account
         if: github.ref == 'refs/heads/dev'
         run: |
@@ -93,26 +103,31 @@ jobs:
       - name: Update Launch Template
         id: launch-template
         run: |
-          # Get Launch Template ID with proper filter
+          # Get Launch Template ID with correct filter
           LAUNCH_TEMPLATE_ID=$(aws ec2 describe-launch-templates \
             --filters "Name=tag:Name,Values=web-app-lt" \
             --query 'LaunchTemplates[0].LaunchTemplateId' \
             --output text)
+
+          echo "Found Launch Template ID: ${LAUNCH_TEMPLATE_ID}"
 
           if [ -z "$LAUNCH_TEMPLATE_ID" ] || [ "$LAUNCH_TEMPLATE_ID" = "None" ]; then
             echo "Error: Launch template not found"
             exit 1
           fi
 
-          echo "Found Launch Template ID: $LAUNCH_TEMPLATE_ID"
-
-          # Create new version
+          # Create new version with new AMI
           NEW_VERSION=$(aws ec2 create-launch-template-version \
             --launch-template-id $LAUNCH_TEMPLATE_ID \
             --source-version '$Latest' \
             --launch-template-data "{\"ImageId\":\"${{ steps.packer.outputs.ami_id }}\"}" \
             --query 'LaunchTemplateVersion.VersionNumber' \
             --output text)
+
+          # Update default version
+          aws ec2 modify-launch-template \
+            --launch-template-id $LAUNCH_TEMPLATE_ID \
+            --default-version $NEW_VERSION
 
       - name: Start Instance Refresh
         id: refresh
