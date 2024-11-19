@@ -103,24 +103,13 @@ jobs:
       - name: Update Launch Template
         id: launch-template
         run: |
-          # Get Launch Template ID with correct filter
-          LAUNCH_TEMPLATE_ID=$(aws ec2 describe-launch-templates \
-            --filters "Name=launch-template-name,Values=web-app-lt*" \
-            --query 'LaunchTemplates[0].LaunchTemplateId' \
-            --output text)
 
-          echo "Found Launch Template ID: ${LAUNCH_TEMPLATE_ID}"
-
-          if [ -z "$LAUNCH_TEMPLATE_ID" ] || [ "$LAUNCH_TEMPLATE_ID" = "None" ]; then
-            echo "Error: Launch template not found"
-            exit 1
-          fi
           # Get the AMI ID from previous step
           AMI_ID="${{ steps.packer.outputs.ami_id }}"
 
           # Create new version with new AMI
           NEW_VERSION=$(aws ec2 create-launch-template-version \
-            --launch-template-id $LAUNCH_TEMPLATE_ID \
+            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
             --source-version '$Latest' \
             --launch-template-data "{\"ImageId\":\"${{ steps.packer.outputs.ami_id }}\"}" \
             --query 'LaunchTemplateVersion.VersionNumber' \
@@ -128,7 +117,7 @@ jobs:
 
           # Update default version
           aws ec2 modify-launch-template \
-            --launch-template-id $LAUNCH_TEMPLATE_ID \
+            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
             --default-version $NEW_VERSION
 
       - name: Start Instance Refresh
