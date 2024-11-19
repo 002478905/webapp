@@ -29,7 +29,8 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default = "subnet-04627e74a7ab23048"
+  default=""
+ # default = "subnet-04627e74a7ab23048"
 }
 variable "demo_account_id" {
   type    = string
