@@ -85,7 +85,7 @@ jobs:
             ./webapp-ami.pkr.hcl
 
           # Get and set the AMI ID
-          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225-*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
           if [ -z "$AMI_ID" ] || [ "$AMI_ID" = "None" ]; then
             echo "Error: No AMI found"
             exit 1
@@ -95,7 +95,7 @@ jobs:
       - name: Share AMI with Demo Account
         if: github.ref == 'refs/heads/dev'
         run: |
-          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
+          AMI_ID=$(aws ec2 describe-images --owners self --filters "Name=name,Values=csye6225-*" --query 'sort_by(Images, &CreationDate)[-1].ImageId' --output text)
           aws ec2 modify-image-attribute \
             --image-id $AMI_ID \
             --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
