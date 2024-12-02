@@ -112,7 +112,7 @@ router.post("/", async (req, res) => {
     });
     console.log("before sns");
     // Add logging to debug SNS publishing
-    logger.info("SNS_TOPIC_ARN:", process.env.USER_REGISTRATION_SNS_TOPIC);
+    logger.info("SNS_TOPIC_ARN:", process.env.SNS_TOPIC_ARN);
     logger.info("Publishing message:", message);
     sns
       .publish({
